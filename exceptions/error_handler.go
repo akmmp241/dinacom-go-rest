@@ -22,6 +22,12 @@ func HandleError(c *fiber.Ctx, err error) error {
 		return internalServerError(c)
 	}
 
+	var e *fiber.Error
+	if errors.As(err, &e) {
+		globalResponse.Message = err.Error()
+		return c.Status(e.Code).JSON(&globalResponse)
+	}
+
 	return baseError(c, err.(GlobalError))
 }
 
@@ -35,6 +41,7 @@ func validationError(c *fiber.Ctx, err validator.ValidationErrors) error {
 
 func baseError(c *fiber.Ctx, err GlobalError) error {
 	globalResponse.Message = err.Error()
+	globalResponse.Errors = nil
 
 	log.Println(err.Error())
 	return c.Status(err.GetCode()).JSON(&globalResponse)
