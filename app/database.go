@@ -1,12 +1,13 @@
 package app
 
 import (
+	"akmmp241/dinamcom-2024/dinacom-go-rest/config"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 )
 
-func NewDB(cnf *Config) *sql.DB {
+func NewDB(cnf *config.Config) *sql.DB {
 	DbName := cnf.Env.GetString("DB_NAME")
 	DbUser := cnf.Env.GetString("DB_USER")
 	DbPass := cnf.Env.GetString("DB_PASS")
