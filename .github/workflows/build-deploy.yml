@@ -33,6 +33,7 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/dinacom-go-rest:latest
   
   deploy:
+    environment: staging
     needs: build
     name: Deploy
     runs-on: ubuntu-latest
