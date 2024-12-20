@@ -25,10 +25,10 @@ func StringToBase64(s []byte) string {
 	return base64.StdEncoding.EncodeToString(s)
 }
 
-func Base64ToByte(s string) []byte {
+func Base64ToString(s string) string {
 	b, _ := base64.StdEncoding.DecodeString(s)
 
-	return b
+	return string(b)
 }
 
 var bytes = []byte{35, 46, 57, 24, 85, 35, 24, 74, 87, 35, 88, 98, 66, 32, 14, 05}
@@ -50,9 +50,9 @@ func Decrypt(text, MySecret string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cipherText := Base64ToByte(text)
+	cipherText := Base64ToString(text)
 	cfb := cipher.NewCFBDecrypter(block, bytes)
 	plainText := make([]byte, len(cipherText))
-	cfb.XORKeyStream(plainText, cipherText)
+	cfb.XORKeyStream(plainText, []byte(cipherText))
 	return string(plainText), nil
 }

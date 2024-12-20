@@ -10,6 +10,7 @@ import (
 
 type SessionRepository interface {
 	Save(ctx context.Context, tx *sql.Tx, session *model.Session) (*model.Session, error)
+	FindByToken(ctx context.Context, tx *sql.Tx, token string) (*model.Session, error)
 }
 
 type SessionRepositoryImpl struct {
@@ -34,4 +35,27 @@ func (s SessionRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, session *mo
 
 	session.Id = int(id)
 	return session, nil
+}
+
+func (s SessionRepositoryImpl) FindByToken(ctx context.Context, tx *sql.Tx, token string) (*model.Session, error) {
+	query := `SELECT id, user_id, token, expires_at FROM sessions WHERE token = ?`
+	rows, err := tx.QueryContext(ctx, query, token)
+	if err != nil {
+		log.Println("error query")
+		return nil, exceptions.NewInternalServerError()
+	}
+	defer rows.Close()
+
+	var session model.Session
+	if !rows.Next() {
+		return nil, exceptions.NewNotFoundError()
+	}
+
+	err = rows.Scan(&session.Id, &session.UserId, &session.Token, &session.ExpiresAt)
+	if err != nil {
+		log.Println("error scan", err.Error())
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	return &session, nil
 }

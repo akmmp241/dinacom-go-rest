@@ -10,6 +10,7 @@ import (
 type AuthController interface {
 	Register(c *fiber.Ctx) error
 	Login(c *fiber.Ctx) error
+	Me(c *fiber.Ctx) error
 }
 
 type AuthControllerImpl struct {
@@ -52,6 +53,26 @@ func (con *AuthControllerImpl) Login(c *fiber.Ctx) error {
 	globalResponse := model.GlobalResponse{
 		Message: "Login success",
 		Data:    &loginResponse,
+		Errors:  nil,
+	}
+
+	return c.JSON(&globalResponse)
+}
+
+func (con *AuthControllerImpl) Me(c *fiber.Ctx) error {
+	token := c.Get("Authorization")
+	if token == "" {
+		return exceptions.NewBadRequestError("Missing access token")
+	}
+
+	meResponse, err := con.AuthService.Me(c.Context(), token)
+	if err != nil {
+		return err
+	}
+
+	globalResponse := model.GlobalResponse{
+		Message: "Get user success",
+		Data:    meResponse,
 		Errors:  nil,
 	}
 

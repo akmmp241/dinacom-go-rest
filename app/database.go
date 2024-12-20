@@ -14,7 +14,9 @@ func NewDB(cnf *config.Config) *sql.DB {
 	DbHost := cnf.Env.GetString("DB_HOST")
 	DbPort := cnf.Env.GetString("DB_PORT")
 
-	conn, err := sql.Open("mysql", DbUser+":"+DbPass+"@tcp("+DbHost+":"+DbPort+")/"+DbName)
+	dsn := DbUser + ":" + DbPass + "@tcp(" + DbHost + ":" + DbPort + ")/" + DbName + "?parseTime=true"
+
+	conn, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatal("error while connect to database", err)
 	}

@@ -18,6 +18,7 @@ import (
 type AuthService interface {
 	Register(ctx context.Context, req model.RegisterRequest) (*model.RegisterResponse, error)
 	Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error)
+	Me(ctx context.Context, token string) (*model.MeResponse, error)
 }
 
 type AuthServiceImpl struct {
@@ -112,13 +113,13 @@ func (s AuthServiceImpl) Login(ctx context.Context, req model.LoginRequest) (*mo
 
 	user, err := s.UserRepo.FindByEmail(ctx, tx, req.Email)
 	if err != nil && errors.Is(err, exceptions.NotFoundError{}) {
-		return nil, exceptions.NewBadRequestError("Invalid Credentials")
+		return nil, exceptions.NewHttpConflictError("Invalid Credentials")
 	} else if err != nil && !errors.Is(err, exceptions.NotFoundError{}) {
 		return nil, err
 	}
 
 	if !helpers.VerifyPassword(req.Password, user.Password) {
-		return nil, exceptions.NewBadRequestError("Invalid Credentials")
+		return nil, exceptions.NewHttpConflictError("Invalid Credentials")
 	}
 
 	token := uuid.NewString()
@@ -147,5 +148,46 @@ func (s AuthServiceImpl) Login(ctx context.Context, req model.LoginRequest) (*mo
 		Name:  user.Name,
 		Email: user.Email,
 		Token: encryptedToken,
+	}, nil
+}
+
+func (s AuthServiceImpl) Me(ctx context.Context, token string) (*model.MeResponse, error) {
+	decodedToken, err := helpers.Decrypt(token, s.Cnf.Env.GetString("APP_KEY"))
+	if err != nil {
+		return nil, exceptions.NewUnauthorizedError("Unauthorized")
+	}
+
+	decodedTokenBase64 := helpers.Base64ToString(decodedToken)
+
+	tx, err := s.DB.Begin()
+	if err != nil {
+		log.Println("here")
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	session, err := s.SessionRepo.FindByToken(ctx, tx, decodedTokenBase64)
+	if err != nil && errors.Is(err, exceptions.NotFoundError{}) {
+		return nil, exceptions.NewUnauthorizedError("Unauthorized")
+	} else if err != nil {
+		log.Println("here 2")
+		return nil, err
+	}
+
+	if session.ExpiresAt.Before(time.Now()) {
+		return nil, exceptions.NewUnauthorizedError("Unauthorized")
+	}
+
+	user, err := s.UserRepo.FindById(ctx, tx, session.UserId)
+	if err != nil {
+		log.Println("here 3")
+		return nil, err
+	}
+
+	_ = tx.Commit()
+
+	return &model.MeResponse{
+		Id:    user.Id,
+		Name:  user.Name,
+		Email: user.Email,
 	}, nil
 }
