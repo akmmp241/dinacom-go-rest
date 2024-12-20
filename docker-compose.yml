@@ -1,0 +1,32 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+    networks:
+      - dinacom-net
+    restart: on-failure
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.4
+    container_name: dinacom-db
+    restart: always
+    ports:
+      - "3306:3306"
+    env_file:
+      - ./.env
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - dinacom-net
+
+volumes:
+  db_data:
+
+networks:
+  dinacom-net:
+    driver: bridge
