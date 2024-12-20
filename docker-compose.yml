@@ -3,8 +3,8 @@ services:
     build: .
     ports:
       - "3000:3000"
-    environment:
-      - DB_HOST=db
+    env_file:
+      - ./.env
     networks:
       - dinacom-net
     restart: on-failure

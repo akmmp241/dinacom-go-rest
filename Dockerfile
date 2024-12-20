@@ -26,17 +26,16 @@ FROM alpine
 RUN apk add --no-cache ca-certificates tzdata
 RUN apk add dumb-init
 
-
 # Set timezone
 ENV TZ=Asia/Jakarta
 
 # Set working directory
 WORKDIR /out
 
+RUN touch .env
+
 # Copy the built binary from the builder stage
 COPY --from=builder /out/build /out/build
-
-COPY .env .env
 
 EXPOSE 3000
 
