@@ -16,14 +16,18 @@ func main() {
 
 	validate := validator.New()
 
+	aiClient := config.InitAiClient(cnf)
+
 	userRepo := repository.NewUserRepository()
 	sessionRepo := repository.NewSessionRepository()
 
 	authService := service.NewAuthService(userRepo, sessionRepo, db, validate, cnf)
+	aiService := service.NewAIService(validate, cnf, aiClient)
 
 	authController := controllers.NewAuthController(authService)
+	aiController := controllers.NewAIController(aiService)
 
-	fiberApp := app.NewRouter(authController)
+	fiberApp := app.NewRouter(authController, aiController)
 
 	if err := fiberApp.Listen(":3000"); err != nil {
 		panic(err)

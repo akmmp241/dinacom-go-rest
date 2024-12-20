@@ -7,7 +7,10 @@ import (
 	"time"
 )
 
-func NewRouter(authController controllers.AuthController) *fiber.App {
+func NewRouter(
+	authController controllers.AuthController,
+	aiController controllers.AIController,
+) *fiber.App {
 	appRouter := fiber.New(fiber.Config{
 		Prefork:      true,
 		AppName:      "Evia-BE-REST",
@@ -18,10 +21,12 @@ func NewRouter(authController controllers.AuthController) *fiber.App {
 	api := appRouter.Group("/api")
 
 	auth := api.Group("/auth")
-
 	auth.Post("/register", authController.Register)
 	auth.Post("/login", authController.Login)
 	auth.Get("/me", authController.Me)
+
+	ai := api.Group("/ai")
+	ai.Post("/simplify", aiController.Simplifier)
 
 	return appRouter
 }

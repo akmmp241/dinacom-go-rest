@@ -44,3 +44,12 @@ type MeResponse struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
+
+type SimplifyRequest struct {
+	Message string `json:"message" validate:"required"`
+}
+
+type SimplifyResponse struct {
+	Message       string `json:"message"`
+	SimplifiedMsg string `json:"simplified_msg"`
+}
