@@ -25,10 +25,10 @@ func NewDB(cnf *config.Config) *sql.DB {
 	}
 	log.Println("Connected to database")
 
-	conn.SetMaxIdleConns(10)
-	conn.SetConnMaxLifetime(5)
-	conn.SetMaxOpenConns(10)
-	conn.SetConnMaxIdleTime(10)
+	//conn.SetMaxIdleConns(10)
+	//conn.SetConnMaxLifetime(5)
+	//conn.SetMaxOpenConns(10)
+	//conn.SetConnMaxIdleTime(10)
 
 	return conn
 }

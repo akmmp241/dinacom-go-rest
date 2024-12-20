@@ -41,6 +41,7 @@ func (u UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.Tx, email s
 	if err != nil {
 		return nil, exceptions.NewInternalServerError()
 	}
+	defer rows.Close()
 
 	var user model.User
 	if !rows.Next() {

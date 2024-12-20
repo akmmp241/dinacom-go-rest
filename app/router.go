@@ -20,6 +20,7 @@ func NewRouter(authController controllers.AuthController) *fiber.App {
 	auth := api.Group("/auth")
 
 	auth.Post("/register", authController.Register)
+	auth.Post("/login", authController.Login)
 
 	return appRouter
 }

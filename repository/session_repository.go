@@ -5,6 +5,7 @@ import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/model"
 	"context"
 	"database/sql"
+	"log"
 )
 
 type SessionRepository interface {
@@ -22,6 +23,7 @@ func (s SessionRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, session *mo
 	query := `INSERT INTO sessions (id, user_id, token, expires_at) VALUES (NULL, ?, ?, ?)`
 	result, err := tx.ExecContext(ctx, query, session.UserId, session.Token, session.ExpiresAt)
 	if err != nil {
+		log.Println(err.Error())
 		return nil, exceptions.NewInternalServerError()
 	}
 
