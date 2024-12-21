@@ -41,7 +41,6 @@ func (s SessionRepositoryImpl) FindByToken(ctx context.Context, tx *sql.Tx, toke
 	query := `SELECT id, user_id, token, expires_at FROM sessions WHERE token = ?`
 	rows, err := tx.QueryContext(ctx, query, token)
 	if err != nil {
-		log.Println("error query")
 		return nil, exceptions.NewInternalServerError()
 	}
 	defer rows.Close()
@@ -53,7 +52,6 @@ func (s SessionRepositoryImpl) FindByToken(ctx context.Context, tx *sql.Tx, toke
 
 	err = rows.Scan(&session.Id, &session.UserId, &session.Token, &session.ExpiresAt)
 	if err != nil {
-		log.Println("error scan", err.Error())
 		return nil, exceptions.NewInternalServerError()
 	}
 

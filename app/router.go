@@ -3,11 +3,13 @@ package app
 import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/controllers"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/exceptions"
+	"akmmp241/dinamcom-2024/dinacom-go-rest/middleware"
 	"github.com/gofiber/fiber/v2"
 	"time"
 )
 
 func NewRouter(
+	middleware middleware.Middleware,
 	authController controllers.AuthController,
 	aiController controllers.AIController,
 ) *fiber.App {
@@ -25,7 +27,7 @@ func NewRouter(
 	auth.Post("/login", authController.Login)
 	auth.Get("/me", authController.Me)
 
-	ai := api.Group("/ai")
+	ai := api.Use(middleware.Authenticate).Group("/ai")
 	ai.Post("/simplify", aiController.Simplifier)
 
 	return appRouter

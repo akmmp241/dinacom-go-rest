@@ -161,7 +161,6 @@ func (s AuthServiceImpl) Me(ctx context.Context, token string) (*model.MeRespons
 
 	tx, err := s.DB.Begin()
 	if err != nil {
-		log.Println("here")
 		return nil, exceptions.NewInternalServerError()
 	}
 
@@ -169,7 +168,6 @@ func (s AuthServiceImpl) Me(ctx context.Context, token string) (*model.MeRespons
 	if err != nil && errors.Is(err, exceptions.NotFoundError{}) {
 		return nil, exceptions.NewUnauthorizedError("Unauthorized")
 	} else if err != nil {
-		log.Println("here 2")
 		return nil, err
 	}
 
@@ -179,7 +177,6 @@ func (s AuthServiceImpl) Me(ctx context.Context, token string) (*model.MeRespons
 
 	user, err := s.UserRepo.FindById(ctx, tx, session.UserId)
 	if err != nil {
-		log.Println("here 3")
 		return nil, err
 	}
 
