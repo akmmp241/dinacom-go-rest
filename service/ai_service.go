@@ -3,18 +3,19 @@ package service
 import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/config"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/exceptions"
+	"akmmp241/dinamcom-2024/dinacom-go-rest/helpers"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/model"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/generative-ai-go/genai"
 	"log"
 )
 
-var systemInstruction = "Kamu adalah sebuah sistem yang hanya bertugas untuk mengoptimalkan penggunaan kata/kalimat pada suatu teks. Buatlah teks tersebut menjadi lebih efisien dan proper. Apapun yang terjadi kamu tidak perlu merespon, kamu hanya perlu memberikan jawaban sesuai instruksi"
-
 type AIService interface {
 	Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error)
+	ExternalWound(ctx context.Context, req *model.ExternalWoundRequest) (*model.ExternalWoundResponse, error)
 }
 
 type AIServiceImpl struct {
@@ -41,11 +42,13 @@ func (A AIServiceImpl) Simplifier(ctx context.Context, req *model.SimplifyReques
 		return nil, err
 	}
 
+	systemInstruction := A.Cnf.Env.GetString("SIMPLIFIER_SYSTEM_INSTRUCTION")
+
 	generativeModel := A.AIClient.Genai.GenerativeModel("gemini-1.5-flash")
 
 	generativeModel.SetTemperature(1)
 	generativeModel.SetTopK(40)
-	generativeModel.SetTopP(0.00)
+	generativeModel.SetTopP(0.95)
 	generativeModel.SetMaxOutputTokens(8192)
 	generativeModel.ResponseMIMEType = "text/plain"
 	generativeModel.SystemInstruction = &genai.Content{
@@ -70,4 +73,84 @@ func (A AIServiceImpl) Simplifier(ctx context.Context, req *model.SimplifyReques
 		Message:       req.Message,
 		SimplifiedMsg: simplifiedMsg,
 	}, nil
+}
+
+func (A AIServiceImpl) ExternalWound(ctx context.Context, req *model.ExternalWoundRequest) (*model.ExternalWoundResponse, error) {
+	err := A.Validate.Struct(req)
+	if err != nil {
+		return nil, err
+	}
+
+	systemInstruction := A.Cnf.Env.GetString("EVIA_SYSTEM_INSTRUCTION")
+
+	generativeModel := A.AIClient.Genai.GenerativeModel("gemini-1.5-flash")
+
+	generativeModel.SetTemperature(1.6)
+	generativeModel.SetTopK(40)
+	generativeModel.SetTopP(0.95)
+	generativeModel.SetMaxOutputTokens(8192)
+	generativeModel.ResponseMIMEType = "application/json"
+	generativeModel.SystemInstruction = &genai.Content{
+		Parts: []genai.Part{genai.Text(systemInstruction)},
+	}
+	generativeModel.ResponseSchema = &genai.Schema{
+		Type: genai.TypeObject,
+		Properties: map[string]*genai.Schema{
+			"overview": {
+				Type: genai.TypeString,
+			},
+			"conclusion": {
+				Type: genai.TypeString,
+			},
+			"details": {
+				Type: genai.TypeObject,
+				Properties: map[string]*genai.Schema{
+					"symptoms": {
+						Type: genai.TypeString,
+					},
+					"handling": {
+						Type: genai.TypeString,
+					},
+					"drug": {
+						Type: genai.TypeString,
+					},
+					"reason": {
+						Type: genai.TypeString,
+					},
+					"precautions": {
+						Type: genai.TypeString,
+					},
+				},
+			},
+		},
+	}
+
+	fileURIs, err := helpers.UploadToGemini(ctx, A.AIClient.Genai, req.Image, "image/png")
+
+	session := generativeModel.StartChat()
+	session.History = []*genai.Content{
+		{
+			Role: "user",
+			Parts: []genai.Part{
+				genai.FileData{URI: fileURIs},
+			},
+		},
+	}
+
+	resp, err := session.SendMessage(ctx, genai.Text("test"))
+	if err != nil {
+		log.Fatalf("Error sending message: %v", err)
+	}
+
+	var externalWoundResponse model.ExternalWoundResponse
+	for _, part := range resp.Candidates[0].Content.Parts {
+		jsonPart := fmt.Sprintf("%v\n", part)
+		err = json.Unmarshal([]byte(jsonPart), &externalWoundResponse)
+		if err != nil {
+			log.Println("Error while unmarshalling response: ", err.Error())
+			return nil, exceptions.NewInternalServerError()
+		}
+	}
+
+	return &externalWoundResponse, nil
 }

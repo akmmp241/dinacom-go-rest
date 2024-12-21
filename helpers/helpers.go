@@ -1,10 +1,14 @@
 package helpers
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
+	"github.com/google/generative-ai-go/genai"
 	"golang.org/x/crypto/bcrypt"
+	"log"
+	"mime/multipart"
 )
 
 func HashPassword(pass string) (string, error) {
@@ -55,4 +59,18 @@ func Decrypt(text, MySecret string) (string, error) {
 	plainText := make([]byte, len(cipherText))
 	cfb.XORKeyStream(plainText, []byte(cipherText))
 	return string(plainText), nil
+}
+
+func UploadToGemini(ctx context.Context, client *genai.Client, file multipart.File, mimeType string) (string, error) {
+	options := genai.UploadFileOptions{
+		DisplayName: "uploaded-image",
+		MIMEType:    mimeType,
+	}
+	fileData, err := client.UploadFile(ctx, "", file, &options)
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("Uploaded file %s as: %s", fileData.DisplayName, fileData.URI)
+	return fileData.URI, nil
 }

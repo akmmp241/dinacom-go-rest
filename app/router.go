@@ -29,6 +29,7 @@ func NewRouter(
 
 	ai := api.Use(middleware.Authenticate).Group("/ai")
 	ai.Post("/simplify", aiController.Simplifier)
+	ai.Post("/external/wound", aiController.ExternalWound)
 
 	return appRouter
 }
