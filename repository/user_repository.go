@@ -10,6 +10,7 @@ import (
 type UserRepository interface {
 	Save(ctx context.Context, tx *sql.Tx, user *model.User) (*model.User, error)
 	FindByEmail(ctx context.Context, tx *sql.Tx, email string) (*model.User, error)
+	FindById(ctx context.Context, tx *sql.Tx, id int) (*model.User, error)
 }
 
 type UserRepositoryImpl struct {
@@ -41,6 +42,28 @@ func (u UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.Tx, email s
 	if err != nil {
 		return nil, exceptions.NewInternalServerError()
 	}
+	defer rows.Close()
+
+	var user model.User
+	if !rows.Next() {
+		return nil, exceptions.NewNotFoundError()
+	}
+
+	err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Password)
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	return &user, nil
+}
+
+func (u UserRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, id int) (*model.User, error) {
+	query := `SELECT id, name, email, password FROM users WHERE id = ?`
+	rows, err := tx.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+	defer rows.Close()
 
 	var user model.User
 	if !rows.Next() {

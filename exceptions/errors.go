@@ -49,7 +49,7 @@ func (h HttpConflictError) GetCode() int {
 	return h.Code
 }
 
-func NewConflictError(msg string) HttpConflictError {
+func NewHttpConflictError(msg string) HttpConflictError {
 	return HttpConflictError{Msg: msg, Code: http.StatusConflict}
 }
 
@@ -68,4 +68,21 @@ func (i HttpInternalServerError) GetCode() int {
 
 func NewInternalServerError() HttpInternalServerError {
 	return HttpInternalServerError{Msg: "Internal Server Error", Code: http.StatusInternalServerError}
+}
+
+type HttpUnauthorized struct {
+	Msg  string
+	Code int
+}
+
+func (u HttpUnauthorized) Error() string {
+	return u.Msg
+}
+
+func (u HttpUnauthorized) GetCode() int {
+	return u.Code
+}
+
+func NewUnauthorizedError(msg string) HttpUnauthorized {
+	return HttpUnauthorized{Msg: msg, Code: http.StatusUnauthorized}
 }

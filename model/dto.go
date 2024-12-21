@@ -1,5 +1,9 @@
 package model
 
+import (
+	"mime/multipart"
+)
+
 type GlobalResponse struct {
 	Message string `json:"message"`
 	Data    any    `json:"data"`
@@ -25,4 +29,50 @@ type RegisterResponse struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 	Token string `json:"token"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8,max=255"`
+}
+
+type LoginResponse struct {
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Token string `json:"token"`
+}
+
+type MeResponse struct {
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+type SimplifyRequest struct {
+	Message string `json:"message" validate:"required"`
+}
+
+type SimplifyResponse struct {
+	Message       string `json:"message"`
+	SimplifiedMsg string `json:"simplified_msg"`
+}
+
+type ExternalWoundRequest struct {
+	Complaint string         `json:"complaint" validate:"required"`
+	Image     multipart.File `json:"image" validate:"required"`
+}
+
+type ExternalWoundDetails struct {
+	Symptoms    string `json:"symptoms"`
+	Handling    string `json:"handling"`
+	Drug        string `json:"drug"`
+	Reason      string `json:"reason"`
+	Precautions string `json:"precautions"`
+}
+
+type ExternalWoundResponse struct {
+	Overview   string               `json:"overview"`
+	Conclusion string               `json:"conclusion"`
+	Details    ExternalWoundDetails `json:"details"`
 }
