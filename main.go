@@ -21,9 +21,10 @@ func main() {
 
 	userRepo := repository.NewUserRepository()
 	sessionRepo := repository.NewSessionRepository()
+	complaintRepo := repository.NewComplaintRepository()
 
 	authService := service.NewAuthService(userRepo, sessionRepo, db, validate, cnf)
-	aiService := service.NewAIService(validate, cnf, aiClient)
+	aiService := service.NewAIService(validate, cnf, aiClient, complaintRepo, db)
 
 	authController := controllers.NewAuthController(authService)
 	aiController := controllers.NewAIController(aiService)

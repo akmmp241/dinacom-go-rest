@@ -15,3 +15,12 @@ type Session struct {
 	Token     string
 	ExpiresAt time.Time
 }
+
+type Complaint struct {
+	Id            string
+	UserId        int
+	Title         string
+	ComplaintsMsg string
+	Response      string
+	CreatedAt     time.Time
+}

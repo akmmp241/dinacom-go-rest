@@ -19,20 +19,26 @@ type AIService interface {
 }
 
 type AIServiceImpl struct {
-	Validate *validator.Validate
-	Cnf      *config.Config
-	AIClient *config.AIClient
+	Validate      *validator.Validate
+	Cnf           *config.Config
+	AIClient      *config.AIClient
+	DB            *sql.DB
+	ComplaintRepo repository.ComplaintRepository
 }
 
 func NewAIService(
 	validate *validator.Validate,
 	cnf *config.Config,
 	aiClient *config.AIClient,
+	complaintRepo repository.ComplaintRepository,
+	db *sql.DB,
 ) AIService {
 	return &AIServiceImpl{
-		Validate: validate,
-		Cnf:      cnf,
-		AIClient: aiClient,
+		Validate:      validate,
+		Cnf:           cnf,
+		AIClient:      aiClient,
+		ComplaintRepo: complaintRepo,
+		DB:            db,
 	}
 }
 
@@ -67,7 +73,7 @@ func (A AIServiceImpl) Simplifier(ctx context.Context, req *model.SimplifyReques
 	}, nil
 }
 
-func (A AIServiceImpl) ExternalWound(ctx context.Context, req *model.ExternalWoundRequest) (*model.ExternalWoundResponse, error) {
+func (A AIServiceImpl) ExternalWound(ctx context.Context, req *model.ExternalWoundRequest, user *model.User) (*model.ExternalWoundResponse, error) {
 	err := A.Validate.Struct(req)
 	if err != nil {
 		return nil, err
