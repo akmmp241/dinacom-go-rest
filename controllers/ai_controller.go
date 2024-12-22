@@ -58,7 +58,9 @@ func (A AIControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 	defer open.Close()
 	req.Image = open
 
-	resp, err := A.AIService.ExternalWound(ctx.Context(), req)
+	user := ctx.UserContext().Value("user").(*model.User)
+
+	resp, err := A.AIService.ExternalWound(ctx.Context(), req, user)
 	if err != nil {
 		return err
 	}

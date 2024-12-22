@@ -5,17 +5,21 @@ import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/exceptions"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/helpers"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/model"
+	"akmmp241/dinamcom-2024/dinacom-go-rest/repository"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/generative-ai-go/genai"
+	"github.com/google/uuid"
 	"log"
+	"time"
 )
 
 type AIService interface {
 	Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error)
-	ExternalWound(ctx context.Context, req *model.ExternalWoundRequest) (*model.ExternalWoundResponse, error)
+	ExternalWound(ctx context.Context, req *model.ExternalWoundRequest, user *model.User) (*model.ExternalWoundResponse, error)
 }
 
 type AIServiceImpl struct {
@@ -96,20 +100,46 @@ func (A AIServiceImpl) ExternalWound(ctx context.Context, req *model.ExternalWou
 		},
 	}
 
-	resp, err := session.SendMessage(ctx, genai.Text("test"))
+	resp, err := session.SendMessage(ctx, genai.Text(req.Complaint))
 	if err != nil {
-		log.Fatalf("Error sending message: %v", err)
+		log.Println("Error while sending message: ", err.Error())
+		return nil, exceptions.NewInternalServerError()
 	}
 
 	var externalWoundResponse model.ExternalWoundResponse
+	jsonResp := ""
 	for _, part := range resp.Candidates[0].Content.Parts {
-		jsonPart := fmt.Sprintf("%v\n", part)
-		err = json.Unmarshal([]byte(jsonPart), &externalWoundResponse)
-		if err != nil {
-			log.Println("Error while unmarshalling response: ", err.Error())
-			return nil, exceptions.NewInternalServerError()
-		}
+		jsonResp += fmt.Sprintf("%v\n", part)
 	}
+	err = json.Unmarshal([]byte(jsonResp), &externalWoundResponse)
+	if err != nil {
+		log.Println("Error while unmarshalling response: ", err.Error())
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	tx, err := A.DB.Begin()
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	generatedId := uuid.NewString()
+	complaint := model.Complaint{
+		Id:            generatedId,
+		UserId:        user.Id,
+		Title:         "test",
+		ComplaintsMsg: req.Complaint,
+		Response:      jsonResp,
+		CreatedAt:     time.Now(),
+	}
+
+	_, err = A.ComplaintRepo.Save(ctx, tx, &complaint)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, err
+	}
+	_ = tx.Commit()
+
+	externalWoundResponse.ComplaintId = generatedId
 
 	return &externalWoundResponse, nil
 }
