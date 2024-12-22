@@ -77,7 +77,7 @@ func (A ComplaintServiceImpl) Simplifier(ctx context.Context, req *model.Simplif
 	}, nil
 }
 
-func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.ExternalWoundRequest, user *model.User) (*model.ExternalWoundResponse, error) {
+func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.ComplaintRequest, user *model.User) (*model.ComplaintResponse, error) {
 	err := A.Validate.Struct(req)
 	if err != nil {
 		return nil, err
@@ -106,12 +106,12 @@ func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.Exte
 		return nil, exceptions.NewInternalServerError()
 	}
 
-	var externalWoundResponse model.ExternalWoundResponse
+	var geminiComplaintResponse model.GeminiComplaintResponse
 	jsonResp := ""
 	for _, part := range resp.Candidates[0].Content.Parts {
 		jsonResp += fmt.Sprintf("%v\n", part)
 	}
-	err = json.Unmarshal([]byte(jsonResp), &externalWoundResponse)
+	err = json.Unmarshal([]byte(jsonResp), &geminiComplaintResponse)
 	if err != nil {
 		log.Println("Error while unmarshalling response: ", err.Error())
 		return nil, exceptions.NewInternalServerError()
@@ -126,7 +126,7 @@ func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.Exte
 	complaint := model.Complaint{
 		Id:            generatedId,
 		UserId:        user.Id,
-		Title:         externalWoundResponse.SuggestedTitle,
+		Title:         geminiComplaintResponse.SuggestedTitle,
 		ComplaintsMsg: req.Complaint,
 		Response:      jsonResp,
 		CreatedAt:     time.Now(),
@@ -139,7 +139,10 @@ func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.Exte
 	}
 	_ = tx.Commit()
 
-	externalWoundResponse.ComplaintId = generatedId
+	externalWoundResponse := model.ComplaintResponse{
+		ComplaintId: generatedId,
+		Response:    geminiComplaintResponse,
+	}
 
 	return &externalWoundResponse, nil
 }
