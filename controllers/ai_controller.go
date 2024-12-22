@@ -71,7 +71,7 @@ func (A AIControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 		Errors:  nil,
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(&globalResponse)
+	return ctx.JSON(&globalResponse)
 }
 
 func NewAIController(AIService service.AIService) *AIControllerImpl {

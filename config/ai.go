@@ -70,6 +70,9 @@ func externalWoundConfig(generativeModel *genai.GenerativeModel) {
 	generativeModel.ResponseSchema = &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
+			"suggested_title": {
+				Type: genai.TypeString,
+			},
 			"overview": {
 				Type: genai.TypeString,
 			},

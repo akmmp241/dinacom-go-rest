@@ -72,8 +72,9 @@ type ExternalWoundDetails struct {
 }
 
 type ExternalWoundResponse struct {
-	ComplaintId string               `json:"complaint_id"`
-	Overview    string               `json:"overview"`
-	Conclusion  string               `json:"conclusion"`
-	Details     ExternalWoundDetails `json:"details"`
+	SuggestedTitle string               `json:"suggested_title"`
+	ComplaintId    string               `json:"complaint_id"`
+	Overview       string               `json:"overview"`
+	Conclusion     string               `json:"conclusion"`
+	Details        ExternalWoundDetails `json:"details"`
 }

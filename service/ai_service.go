@@ -126,7 +126,7 @@ func (A AIServiceImpl) ExternalWound(ctx context.Context, req *model.ExternalWou
 	complaint := model.Complaint{
 		Id:            generatedId,
 		UserId:        user.Id,
-		Title:         "test",
+		Title:         externalWoundResponse.SuggestedTitle,
 		ComplaintsMsg: req.Complaint,
 		Response:      jsonResp,
 		CreatedAt:     time.Now(),
