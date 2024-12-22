@@ -86,3 +86,37 @@ func (u HttpUnauthorized) GetCode() int {
 func NewUnauthorizedError(msg string) HttpUnauthorized {
 	return HttpUnauthorized{Msg: msg, Code: http.StatusUnauthorized}
 }
+
+type HttpForbiddenError struct {
+	Msg  string
+	Code int
+}
+
+func (f HttpForbiddenError) Error() string {
+	return f.Msg
+}
+
+func (f HttpForbiddenError) GetCode() int {
+	return f.Code
+}
+
+func NewForbiddenError(msg string) HttpForbiddenError {
+	return HttpForbiddenError{Msg: msg, Code: http.StatusForbidden}
+}
+
+type HttpNotFoundError struct {
+	Msg  string
+	Code int
+}
+
+func (f HttpNotFoundError) Error() string {
+	return f.Msg
+}
+
+func (f HttpNotFoundError) GetCode() int {
+	return f.Code
+}
+
+func NewHttpNotFoundError(msg string) HttpNotFoundError {
+	return HttpNotFoundError{Msg: msg, Code: http.StatusNotFound}
+}

@@ -58,7 +58,7 @@ type SimplifyResponse struct {
 	SimplifiedMsg string `json:"simplified_msg"`
 }
 
-type ExternalWoundRequest struct {
+type ComplaintRequest struct {
 	Complaint string         `json:"complaint" validate:"required"`
 	Image     multipart.File `json:"image" validate:"required"`
 }
@@ -71,8 +71,20 @@ type ExternalWoundDetails struct {
 	Precautions string `json:"precautions"`
 }
 
-type ExternalWoundResponse struct {
-	Overview   string               `json:"overview"`
-	Conclusion string               `json:"conclusion"`
-	Details    ExternalWoundDetails `json:"details"`
+type GeminiComplaintResponse struct {
+	Overview       string               `json:"overview"`
+	Conclusion     string               `json:"conclusion"`
+	SuggestedTitle string               `json:"suggested_title"`
+	Details        ExternalWoundDetails `json:"details"`
+}
+
+type ComplaintResponse struct {
+	ComplaintId string                  `json:"complaint_id"`
+	Response    GeminiComplaintResponse `json:"response"`
+}
+
+type GetComplaintResponse struct {
+	Id             string `json:"id"`
+	SuggestedTitle string `json:"suggested_title"`
+	ComplaintsMsg  string `json:"complaints_msg"`
 }

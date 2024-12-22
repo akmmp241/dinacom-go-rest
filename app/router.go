@@ -11,7 +11,7 @@ import (
 func NewRouter(
 	middleware middleware.Middleware,
 	authController controllers.AuthController,
-	aiController controllers.AIController,
+	complaintController controllers.ComplaintController,
 ) *fiber.App {
 	appRouter := fiber.New(fiber.Config{
 		Prefork:      true,
@@ -27,9 +27,12 @@ func NewRouter(
 	auth.Post("/login", authController.Login)
 	auth.Get("/me", authController.Me)
 
-	ai := api.Use(middleware.Authenticate).Group("/ai")
-	ai.Post("/simplify", aiController.Simplifier)
-	ai.Post("/external/wound", aiController.ExternalWound)
+	authApi := api.Use(middleware.Authenticate)
+	authApi.Post("/ai/simplify", complaintController.Simplifier)
+
+	complaint := authApi.Group("/complaints")
+	complaint.Post("/", complaintController.ExternalWound)
+	complaint.Get("/:complaintId", complaintController.GetById)
 
 	return appRouter
 }
