@@ -42,17 +42,9 @@ func (A AIServiceImpl) Simplifier(ctx context.Context, req *model.SimplifyReques
 		return nil, err
 	}
 
-	systemInstruction := A.Cnf.Env.GetString("SIMPLIFIER_SYSTEM_INSTRUCTION")
-
-	generativeModel := A.AIClient.Genai.GenerativeModel("gemini-1.5-flash")
-
-	generativeModel.SetTemperature(1)
-	generativeModel.SetTopK(40)
-	generativeModel.SetTopP(0.95)
-	generativeModel.SetMaxOutputTokens(8192)
-	generativeModel.ResponseMIMEType = "text/plain"
-	generativeModel.SystemInstruction = &genai.Content{
-		Parts: []genai.Part{genai.Text(systemInstruction)},
+	generativeModel, err := config.InitModel(A.AIClient.Genai, A.Cnf, config.Simplifier)
+	if err != nil {
+		return nil, err
 	}
 
 	session := generativeModel.StartChat()
@@ -81,48 +73,9 @@ func (A AIServiceImpl) ExternalWound(ctx context.Context, req *model.ExternalWou
 		return nil, err
 	}
 
-	systemInstruction := A.Cnf.Env.GetString("EVIA_SYSTEM_INSTRUCTION")
-
-	generativeModel := A.AIClient.Genai.GenerativeModel("gemini-1.5-flash")
-
-	generativeModel.SetTemperature(1.6)
-	generativeModel.SetTopK(40)
-	generativeModel.SetTopP(0.95)
-	generativeModel.SetMaxOutputTokens(8192)
-	generativeModel.ResponseMIMEType = "application/json"
-	generativeModel.SystemInstruction = &genai.Content{
-		Parts: []genai.Part{genai.Text(systemInstruction)},
-	}
-	generativeModel.ResponseSchema = &genai.Schema{
-		Type: genai.TypeObject,
-		Properties: map[string]*genai.Schema{
-			"overview": {
-				Type: genai.TypeString,
-			},
-			"conclusion": {
-				Type: genai.TypeString,
-			},
-			"details": {
-				Type: genai.TypeObject,
-				Properties: map[string]*genai.Schema{
-					"symptoms": {
-						Type: genai.TypeString,
-					},
-					"handling": {
-						Type: genai.TypeString,
-					},
-					"drug": {
-						Type: genai.TypeString,
-					},
-					"reason": {
-						Type: genai.TypeString,
-					},
-					"precautions": {
-						Type: genai.TypeString,
-					},
-				},
-			},
-		},
+	generativeModel, err := config.InitModel(A.AIClient.Genai, A.Cnf, config.ExternalWound)
+	if err != nil {
+		return nil, err
 	}
 
 	fileURIs, err := helpers.UploadToGemini(ctx, A.AIClient.Genai, req.Image, "image/png")
