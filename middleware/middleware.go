@@ -5,6 +5,7 @@ import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/exceptions"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/helpers"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/repository"
+	"context"
 	"database/sql"
 	"errors"
 	"github.com/gofiber/fiber/v2"
@@ -65,12 +66,15 @@ func (i *MiddlewareImpl) Authenticate(c *fiber.Ctx) error {
 		return exceptions.NewUnauthorizedError("Unauthorized")
 	}
 
-	_, err = i.UserRepo.FindById(c.Context(), tx, session.UserId)
+	user, err := i.UserRepo.FindById(c.Context(), tx, session.UserId)
 	if err != nil {
 		return err
 	}
 
 	_ = tx.Commit()
+
+	ctx := context.WithValue(c.UserContext(), "user", user)
+	c.SetUserContext(ctx)
 
 	return c.Next()
 }
