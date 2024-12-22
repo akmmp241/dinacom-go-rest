@@ -17,12 +17,12 @@ import (
 	"time"
 )
 
-type AIService interface {
+type ComplaintService interface {
 	Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error)
 	ExternalWound(ctx context.Context, req *model.ExternalWoundRequest, user *model.User) (*model.ExternalWoundResponse, error)
 }
 
-type AIServiceImpl struct {
+type ComplaintServiceImpl struct {
 	Validate      *validator.Validate
 	Cnf           *config.Config
 	AIClient      *config.AIClient
@@ -30,14 +30,14 @@ type AIServiceImpl struct {
 	ComplaintRepo repository.ComplaintRepository
 }
 
-func NewAIService(
+func NewComplaintService(
 	validate *validator.Validate,
 	cnf *config.Config,
 	aiClient *config.AIClient,
 	complaintRepo repository.ComplaintRepository,
 	db *sql.DB,
-) AIService {
-	return &AIServiceImpl{
+) ComplaintService {
+	return &ComplaintServiceImpl{
 		Validate:      validate,
 		Cnf:           cnf,
 		AIClient:      aiClient,
@@ -46,7 +46,7 @@ func NewAIService(
 	}
 }
 
-func (A AIServiceImpl) Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error) {
+func (A ComplaintServiceImpl) Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error) {
 	err := A.Validate.Struct(req)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (A AIServiceImpl) Simplifier(ctx context.Context, req *model.SimplifyReques
 	}, nil
 }
 
-func (A AIServiceImpl) ExternalWound(ctx context.Context, req *model.ExternalWoundRequest, user *model.User) (*model.ExternalWoundResponse, error) {
+func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.ExternalWoundRequest, user *model.User) (*model.ExternalWoundResponse, error) {
 	err := A.Validate.Struct(req)
 	if err != nil {
 		return nil, err

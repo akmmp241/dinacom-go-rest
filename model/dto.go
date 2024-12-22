@@ -58,7 +58,7 @@ type SimplifyResponse struct {
 	SimplifiedMsg string `json:"simplified_msg"`
 }
 
-type ExternalWoundRequest struct {
+type ComplaintRequest struct {
 	Complaint string         `json:"complaint" validate:"required"`
 	Image     multipart.File `json:"image" validate:"required"`
 }
@@ -71,7 +71,7 @@ type ExternalWoundDetails struct {
 	Precautions string `json:"precautions"`
 }
 
-type ExternalWoundResponse struct {
+type ComplaintResponse struct {
 	SuggestedTitle string               `json:"suggested_title"`
 	ComplaintId    string               `json:"complaint_id"`
 	Overview       string               `json:"overview"`

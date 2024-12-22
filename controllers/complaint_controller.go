@@ -8,23 +8,23 @@ import (
 	"log"
 )
 
-type AIController interface {
+type ComplaintController interface {
 	Simplifier(ctx *fiber.Ctx) error
 	ExternalWound(ctx *fiber.Ctx) error
 }
 
-type AIControllerImpl struct {
-	AIService service.AIService
+type ComplaintControllerImpl struct {
+	ComplaintService service.ComplaintService
 }
 
-func (A AIControllerImpl) Simplifier(ctx *fiber.Ctx) error {
+func (A ComplaintControllerImpl) Simplifier(ctx *fiber.Ctx) error {
 	simplifyRequest := &model.SimplifyRequest{}
 	err := ctx.BodyParser(simplifyRequest)
 	if err != nil {
 		return exceptions.NewBadRequestError("Invalid request body")
 	}
 
-	resp, err := A.AIService.Simplifier(ctx.Context(), simplifyRequest)
+	resp, err := A.ComplaintService.Simplifier(ctx.Context(), simplifyRequest)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (A AIControllerImpl) Simplifier(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(&globalResponse)
 }
 
-func (A AIControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
+func (A ComplaintControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 	req := &model.ExternalWoundRequest{}
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -60,7 +60,7 @@ func (A AIControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 
 	user := ctx.UserContext().Value("user").(*model.User)
 
-	resp, err := A.AIService.ExternalWound(ctx.Context(), req, user)
+	resp, err := A.ComplaintService.ExternalWound(ctx.Context(), req, user)
 	if err != nil {
 		return err
 	}
@@ -74,6 +74,6 @@ func (A AIControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 	return ctx.JSON(&globalResponse)
 }
 
-func NewAIController(AIService service.AIService) *AIControllerImpl {
-	return &AIControllerImpl{AIService: AIService}
+func NewComplaintController(ComplaintService service.ComplaintService) *ComplaintControllerImpl {
+	return &ComplaintControllerImpl{ComplaintService: ComplaintService}
 }
