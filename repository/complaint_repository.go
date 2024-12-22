@@ -53,7 +53,7 @@ func (c ComplaintRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) ([]mod
 
 func (c ComplaintRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, id string) (*model.Complaint, error) {
 	query := `SELECT id, user_id, title, complaints, response, created_at FROM complaints WHERE id = ?`
-	rows, err := tx.QueryContext(ctx, query)
+	rows, err := tx.QueryContext(ctx, query, &id)
 	if err != nil {
 		return nil, err
 	}

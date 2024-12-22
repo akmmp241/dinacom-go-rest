@@ -32,6 +32,7 @@ func NewRouter(
 
 	complaint := authApi.Group("/complaints")
 	complaint.Post("/", complaintController.ExternalWound)
+	complaint.Get("/:complaintId", complaintController.GetById)
 
 	return appRouter
 }

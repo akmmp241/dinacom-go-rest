@@ -11,6 +11,7 @@ import (
 type ComplaintController interface {
 	Simplifier(ctx *fiber.Ctx) error
 	ExternalWound(ctx *fiber.Ctx) error
+	GetById(ctx *fiber.Ctx) error
 }
 
 type ComplaintControllerImpl struct {
@@ -39,7 +40,7 @@ func (A ComplaintControllerImpl) Simplifier(ctx *fiber.Ctx) error {
 }
 
 func (A ComplaintControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
-	req := &model.ExternalWoundRequest{}
+	req := &model.ComplaintRequest{}
 	err := ctx.BodyParser(req)
 	if err != nil {
 		return exceptions.NewBadRequestError("Invalid request body")
@@ -67,6 +68,28 @@ func (A ComplaintControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 
 	globalResponse := model.GlobalResponse{
 		Message: "Identify external wound success",
+		Data:    resp,
+		Errors:  nil,
+	}
+
+	return ctx.JSON(&globalResponse)
+}
+
+func (A ComplaintControllerImpl) GetById(ctx *fiber.Ctx) error {
+	complaintId := ctx.Params("complaintId")
+	if complaintId == "" {
+		return exceptions.NewBadRequestError("Complaint id is required")
+	}
+
+	user := ctx.UserContext().Value("user").(*model.User)
+
+	resp, err := A.ComplaintService.GetById(ctx.Context(), complaintId, user)
+	if err != nil {
+		return err
+	}
+
+	globalResponse := model.GlobalResponse{
+		Message: "Get complaint success",
 		Data:    resp,
 		Errors:  nil,
 	}

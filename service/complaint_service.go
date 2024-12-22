@@ -9,6 +9,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/generative-ai-go/genai"
@@ -19,7 +20,8 @@ import (
 
 type ComplaintService interface {
 	Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error)
-	ExternalWound(ctx context.Context, req *model.ExternalWoundRequest, user *model.User) (*model.ExternalWoundResponse, error)
+	ExternalWound(ctx context.Context, req *model.ComplaintRequest, user *model.User) (*model.ComplaintResponse, error)
+	GetById(ctx context.Context, complaintId string, user *model.User) (*model.ComplaintResponse, error)
 }
 
 type ComplaintServiceImpl struct {
@@ -145,4 +147,35 @@ func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.Comp
 	}
 
 	return &externalWoundResponse, nil
+}
+
+func (A ComplaintServiceImpl) GetById(ctx context.Context, complaintId string, user *model.User) (*model.ComplaintResponse, error) {
+	tx, err := A.DB.Begin()
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	complaint, err := A.ComplaintRepo.FindById(ctx, tx, complaintId)
+	if err != nil && errors.Is(err, exceptions.NotFoundError{}) {
+		return nil, exceptions.NewHttpNotFoundError("Complaint not found")
+	} else if err != nil && !errors.Is(err, exceptions.NotFoundError{}) {
+		return nil, err
+	}
+
+	if complaint.UserId != user.Id {
+		return nil, exceptions.NewForbiddenError("You are not authorized to access this complaint")
+	}
+
+	var geminiComplaintResponse model.GeminiComplaintResponse
+	err = json.Unmarshal([]byte(complaint.Response), &geminiComplaintResponse)
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	complaintResponse := model.ComplaintResponse{
+		ComplaintId: complaint.Id,
+		Response:    geminiComplaintResponse,
+	}
+
+	return &complaintResponse, nil
 }
