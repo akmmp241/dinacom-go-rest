@@ -6,9 +6,12 @@ import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/helpers"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/model"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/repository"
+	"bytes"
 	"context"
 	"database/sql"
+	_ "embed"
 	"errors"
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -17,10 +20,14 @@ import (
 	"time"
 )
 
+//go:embed mail-templates/send-otp.html
+var OTPTemplateEmail string
+
 type AuthService interface {
 	Register(ctx context.Context, req model.RegisterRequest) (*model.RegisterResponse, error)
 	Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error)
 	Me(ctx context.Context, token string) (*model.MeResponse, error)
+	ForgetPassword(ctx context.Context, req model.ForgetPasswordRequest) error
 }
 
 type AuthServiceImpl struct {
@@ -193,4 +200,55 @@ func (s AuthServiceImpl) Me(ctx context.Context, token string) (*model.MeRespons
 		Name:  user.Name,
 		Email: user.Email,
 	}, nil
+}
+
+func (s AuthServiceImpl) ForgetPassword(ctx context.Context, req model.ForgetPasswordRequest) error {
+	err := s.Validate.Struct(req)
+	if err != nil {
+		return exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
+	}
+
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return exceptions.NewInternalServerError()
+	}
+
+	_, err = s.UserRepo.FindByEmail(ctx, tx, req.Email)
+	if err != nil {
+		time.Sleep(3 * time.Second)
+		return nil
+	}
+
+	otpCode := helpers.GenerateRandomCodeForOtp()
+	key := fmt.Sprintf("otp:%s", req.Email)
+	err = s.RedisClient.SetEx(ctx, key, otpCode, time.Minute*5).Err()
+	if err != nil {
+		log.Println("error while set otp to redis", err)
+		return exceptions.NewInternalServerError()
+	}
+
+	tmpl, err := template.New("email").Parse(OTPTemplateEmail)
+	if err != nil {
+		log.Println("error while parse template", err)
+		return exceptions.NewInternalServerError()
+	}
+
+	otpData := config.SendOtpEmailData{
+		OtpCode: otpCode,
+		Email:   req.Email,
+	}
+
+	var body bytes.Buffer
+	if err := tmpl.Execute(&body, otpData); err != nil {
+		log.Println("error while execute template", err)
+		return exceptions.NewInternalServerError()
+	}
+
+	err = s.Mailer.SendEmail(req.Email, "Forget Password OTP", body.String())
+	if err != nil {
+		log.Println("error while send email", err)
+		return exceptions.NewInternalServerError()
+	}
+
+	return nil
 }

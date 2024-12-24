@@ -11,6 +11,7 @@ type AuthController interface {
 	Register(c *fiber.Ctx) error
 	Login(c *fiber.Ctx) error
 	Me(c *fiber.Ctx) error
+	ForgetPassword(c *fiber.Ctx) error
 }
 
 type AuthControllerImpl struct {
@@ -73,6 +74,27 @@ func (con *AuthControllerImpl) Me(c *fiber.Ctx) error {
 	globalResponse := model.GlobalResponse{
 		Message: "Get user success",
 		Data:    meResponse,
+		Errors:  nil,
+	}
+
+	return c.JSON(&globalResponse)
+}
+
+func (con *AuthControllerImpl) ForgetPassword(c *fiber.Ctx) error {
+	forgetPasswordRequest := &model.ForgetPasswordRequest{}
+	err := c.BodyParser(forgetPasswordRequest)
+	if err != nil {
+		return exceptions.NewBadRequestError("Invalid request body")
+	}
+
+	err = con.AuthService.ForgetPassword(c.Context(), *forgetPasswordRequest)
+	if err != nil {
+		return err
+	}
+
+	globalResponse := model.GlobalResponse{
+		Message: "Forget password success",
+		Data:    nil,
 		Errors:  nil,
 	}
 

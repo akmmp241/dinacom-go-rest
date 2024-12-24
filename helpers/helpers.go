@@ -11,7 +11,9 @@ import (
 	"github.com/google/generative-ai-go/genai"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"math/rand"
 	"mime/multipart"
+	"time"
 )
 
 func HashPassword(pass string) (string, error) {
@@ -91,4 +93,14 @@ func UploadS3(ctx context.Context, uploader *manager.Uploader, file multipart.Fi
 
 	log.Printf("Uploaded fileas: %s", uploadedFile.Location)
 	return uploadedFile.Location, nil
+}
+
+func GenerateRandomCodeForOtp() string {
+	rand.Seed(time.Now().UnixNano())
+	var letters = []rune("0123456789")
+	b := make([]rune, 4)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

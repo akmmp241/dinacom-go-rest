@@ -88,3 +88,7 @@ type GetComplaintResponse struct {
 	SuggestedTitle string `json:"suggested_title"`
 	ComplaintsMsg  string `json:"complaints_msg"`
 }
+
+type ForgetPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
