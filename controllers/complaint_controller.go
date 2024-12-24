@@ -5,13 +5,13 @@ import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/model"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/service"
 	"github.com/gofiber/fiber/v2"
-	"log"
 )
 
 type ComplaintController interface {
 	Simplifier(ctx *fiber.Ctx) error
 	ExternalWound(ctx *fiber.Ctx) error
 	GetById(ctx *fiber.Ctx) error
+	GetAll(ctx *fiber.Ctx) error
 }
 
 type ComplaintControllerImpl struct {
@@ -48,16 +48,9 @@ func (A ComplaintControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 
 	file, err := ctx.FormFile("image")
 	if err != nil {
-		log.Println("Failed to get file", err.Error())
-		return exceptions.NewInternalServerError()
+		return exceptions.NewBadRequestError("Image is required")
 	}
-
-	open, err := file.Open()
-	if err != nil {
-		return exceptions.NewInternalServerError()
-	}
-	defer open.Close()
-	req.Image = open
+	req.Image = file
 
 	user := ctx.UserContext().Value("user").(*model.User)
 
@@ -90,6 +83,23 @@ func (A ComplaintControllerImpl) GetById(ctx *fiber.Ctx) error {
 
 	globalResponse := model.GlobalResponse{
 		Message: "Get complaint success",
+		Data:    resp,
+		Errors:  nil,
+	}
+
+	return ctx.JSON(&globalResponse)
+}
+
+func (A ComplaintControllerImpl) GetAll(ctx *fiber.Ctx) error {
+	user := ctx.UserContext().Value("user").(*model.User)
+
+	resp, err := A.ComplaintService.GetAll(ctx.Context(), user)
+	if err != nil {
+		return err
+	}
+
+	globalResponse := model.GlobalResponse{
+		Message: "Get all complaint success",
 		Data:    resp,
 		Errors:  nil,
 	}

@@ -4,6 +4,7 @@ CREATE TABLE complaints (
     title varchar(255) not null,
     complaints text not null,
     response json not null,
+    image_url text not null,
     created_at timestamp not null,
     constraint fk_user_id_complaints foreign key (user_id) references evia_dev.users(id)
 ) engine innodb;

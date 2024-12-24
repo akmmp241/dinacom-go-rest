@@ -41,7 +41,7 @@ func NewAuthService(
 func (s AuthServiceImpl) Register(ctx context.Context, req model.RegisterRequest) (*model.RegisterResponse, error) {
 	err := s.Validate.Struct(&req)
 	if err != nil {
-		return nil, err
+		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
 	}
 
 	tx, err := s.DB.Begin()
@@ -103,7 +103,7 @@ func (s AuthServiceImpl) Register(ctx context.Context, req model.RegisterRequest
 func (s AuthServiceImpl) Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error) {
 	err := s.Validate.Struct(&req)
 	if err != nil {
-		return nil, err
+		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
 	}
 
 	tx, err := s.DB.Begin()

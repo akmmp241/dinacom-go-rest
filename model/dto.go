@@ -59,8 +59,8 @@ type SimplifyResponse struct {
 }
 
 type ComplaintRequest struct {
-	Complaint string         `json:"complaint" validate:"required"`
-	Image     multipart.File `json:"image" validate:"required"`
+	Complaint string                `json:"complaint" validate:"required"`
+	Image     *multipart.FileHeader `json:"image" validate:"required"`
 }
 
 type ExternalWoundDetails struct {

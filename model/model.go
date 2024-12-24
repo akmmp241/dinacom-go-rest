@@ -22,5 +22,6 @@ type Complaint struct {
 	Title         string
 	ComplaintsMsg string
 	Response      string
+	ImageUrl      string
 	CreatedAt     time.Time
 }
