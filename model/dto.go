@@ -92,3 +92,13 @@ type GetComplaintResponse struct {
 type ForgetPasswordRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
+
+type VerifyForgetPasswordOtpRequest struct {
+	Email string `json:"email" validate:"required,email"`
+	Otp   string `json:"otp" validate:"required"`
+}
+
+type VerifyForgetPasswordOtpResponse struct {
+	Email              string `json:"email"`
+	ResetPasswordToken string `json:"reset_password_token"`
+}

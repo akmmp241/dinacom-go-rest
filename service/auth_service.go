@@ -28,6 +28,7 @@ type AuthService interface {
 	Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error)
 	Me(ctx context.Context, token string) (*model.MeResponse, error)
 	ForgetPassword(ctx context.Context, req model.ForgetPasswordRequest) error
+	VerifyForgetPasswordOtp(ctx context.Context, req model.VerifyForgetPasswordOtpRequest) (*model.VerifyForgetPasswordOtpResponse, error)
 }
 
 type AuthServiceImpl struct {
@@ -251,4 +252,49 @@ func (s AuthServiceImpl) ForgetPassword(ctx context.Context, req model.ForgetPas
 	}
 
 	return nil
+}
+
+func (s AuthServiceImpl) VerifyForgetPasswordOtp(ctx context.Context, req model.VerifyForgetPasswordOtpRequest) (*model.VerifyForgetPasswordOtpResponse, error) {
+	err := s.Validate.Struct(req)
+	if err != nil {
+		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
+	}
+
+	key := fmt.Sprintf("otp:%s", req.Email)
+	otpCode, err := s.RedisClient.Get(ctx, key).Result()
+	if err != nil {
+		return nil, exceptions.NewBadRequestError("Invalid OTP")
+	}
+
+	if otpCode != req.Otp {
+		return nil, exceptions.NewBadRequestError("Invalid OTP")
+	}
+
+	err = s.RedisClient.Del(ctx, key).Err()
+	if err != nil {
+		log.Println("error while delete otp from redis", err)
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	resetPasswordKey := fmt.Sprintf("reset-password:%s", req.Email)
+	resetPasswordToken := uuid.NewString()
+	encodedToken := helpers.StringToBase64([]byte(resetPasswordToken))
+	encryptedToken, err := helpers.Encrypt(encodedToken, s.Cnf.Env.GetString("APP_KEY"))
+	if err != nil {
+		log.Println("error while encrypt token", err)
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	err = s.RedisClient.SetEx(ctx, resetPasswordKey, resetPasswordToken, time.Minute*5).Err()
+	if err != nil {
+		log.Println("error while set reset password token to redis", err)
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	verifyForgetPasswordOtpResponse := model.VerifyForgetPasswordOtpResponse{
+		Email:              req.Email,
+		ResetPasswordToken: encryptedToken,
+	}
+
+	return &verifyForgetPasswordOtpResponse, nil
 }
