@@ -50,13 +50,7 @@ func (A ComplaintControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 	if err != nil {
 		return exceptions.NewBadRequestError("Image is required")
 	}
-
-	open, err := file.Open()
-	if err != nil {
-		return exceptions.NewInternalServerError()
-	}
-	defer open.Close()
-	req.Image = open
+	req.Image = file
 
 	user := ctx.UserContext().Value("user").(*model.User)
 

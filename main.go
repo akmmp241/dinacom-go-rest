@@ -18,20 +18,21 @@ func main() {
 	validate := validator.New()
 
 	aiClient := config.InitAiClient(cnf)
+	awsClient := config.InitS3Client(cnf)
 
 	userRepo := repository.NewUserRepository()
 	sessionRepo := repository.NewSessionRepository()
 	complaintRepo := repository.NewComplaintRepository()
 
 	authService := service.NewAuthService(userRepo, sessionRepo, db, validate, cnf)
-	aiService := service.NewComplaintService(validate, cnf, aiClient, complaintRepo, db)
+	complaintService := service.NewComplaintService(validate, cnf, aiClient, awsClient, complaintRepo, db)
 
 	authController := controllers.NewAuthController(authService)
-	aiController := controllers.NewComplaintController(aiService)
+	complaintController := controllers.NewComplaintController(complaintService)
 
 	mw := middleware.NewMiddleware(cnf, sessionRepo, userRepo, db)
 
-	fiberApp := app.NewRouter(mw, authController, aiController)
+	fiberApp := app.NewRouter(mw, authController, complaintController)
 
 	if err := fiberApp.Listen(":3000"); err != nil {
 		panic(err)

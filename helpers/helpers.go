@@ -5,6 +5,9 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/generative-ai-go/genai"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -73,4 +76,19 @@ func UploadToGemini(ctx context.Context, client *genai.Client, file multipart.Fi
 
 	log.Printf("Uploaded file %s as: %s", fileData.DisplayName, fileData.URI)
 	return fileData.URI, nil
+}
+
+func UploadS3(ctx context.Context, uploader *manager.Uploader, file multipart.File, fileName string, bucket string) (string, error) {
+	uploadedFile, err := uploader.Upload(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(fileName),
+		Body:   file,
+		ACL:    "public-read",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("Uploaded fileas: %s", uploadedFile.Location)
+	return uploadedFile.Location, nil
 }
