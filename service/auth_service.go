@@ -11,6 +11,8 @@ import (
 	"errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
+	"html/template"
 	"log"
 	"time"
 )
@@ -27,6 +29,8 @@ type AuthServiceImpl struct {
 	DB          *sql.DB
 	Validate    *validator.Validate
 	Cnf         *config.Config
+	RedisClient *redis.Client
+	Mailer      *config.Mailer
 }
 
 func NewAuthService(
@@ -34,8 +38,10 @@ func NewAuthService(
 	sessionRepo repository.SessionRepository,
 	DB *sql.DB, validate *validator.Validate,
 	cnf *config.Config,
+	redisClient *redis.Client,
+	mailer *config.Mailer,
 ) *AuthServiceImpl {
-	return &AuthServiceImpl{UserRepo: userRepo, SessionRepo: sessionRepo, DB: DB, Validate: validate, Cnf: cnf}
+	return &AuthServiceImpl{UserRepo: userRepo, SessionRepo: sessionRepo, DB: DB, Validate: validate, Cnf: cnf, RedisClient: redisClient, Mailer: mailer}
 }
 
 func (s AuthServiceImpl) Register(ctx context.Context, req model.RegisterRequest) (*model.RegisterResponse, error) {
