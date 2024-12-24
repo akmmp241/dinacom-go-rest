@@ -22,6 +22,7 @@ type ComplaintService interface {
 	Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error)
 	ExternalWound(ctx context.Context, req *model.ComplaintRequest, user *model.User) (*model.ComplaintResponse, error)
 	GetById(ctx context.Context, complaintId string, user *model.User) (*model.ComplaintResponse, error)
+	GetAll(ctx context.Context, user *model.User) (*[]model.ComplaintResponse, error)
 }
 
 type ComplaintServiceImpl struct {

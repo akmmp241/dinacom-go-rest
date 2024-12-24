@@ -9,7 +9,7 @@ import (
 
 type ComplaintRepository interface {
 	Save(ctx context.Context, tx *sql.Tx, complaints *model.Complaint) (*model.Complaint, error)
-	FindAll(ctx context.Context, tx *sql.Tx) ([]model.Complaint, error)
+	FindAll(ctx context.Context, tx *sql.Tx, userId int) ([]model.Complaint, error)
 	FindById(ctx context.Context, tx *sql.Tx, id string) (*model.Complaint, error)
 }
 
@@ -30,9 +30,9 @@ func (c ComplaintRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, complaint
 	return complaints, nil
 }
 
-func (c ComplaintRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) ([]model.Complaint, error) {
-	query := `SELECT id, user_id, title, complaints, response, created_at FROM complaints`
-	rows, err := tx.QueryContext(ctx, query)
+func (c ComplaintRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx, userId int) ([]model.Complaint, error) {
+	query := `SELECT id, user_id, title, complaints, response, created_at FROM complaints WHERE user_id = ?`
+	rows, err := tx.QueryContext(ctx, query, &userId)
 	if err != nil {
 		return nil, err
 	}
