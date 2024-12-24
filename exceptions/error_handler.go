@@ -3,18 +3,22 @@ package exceptions
 import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/model"
 	"errors"
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"log"
 )
+
+type IError struct {
+	Tag     string `json:"tag"`
+	Message string `json:"message"`
+}
 
 var globalResponse = &model.GlobalResponse{
 	Data: nil,
 }
 
 func HandleError(c *fiber.Ctx, err error) error {
-	if errors.As(err, &validator.ValidationErrors{}) {
-		return validationError(c, err.(validator.ValidationErrors))
+	if errors.As(err, &FailedValidationError{}) {
+		return validationError(c, err.(FailedValidationError))
 	}
 
 	if errors.As(err, &HttpInternalServerError{}) {
@@ -31,12 +35,12 @@ func HandleError(c *fiber.Ctx, err error) error {
 	return baseError(c, err.(GlobalError))
 }
 
-func validationError(c *fiber.Ctx, err validator.ValidationErrors) error {
-	globalResponse.Message = "Failed Validation"
-	globalResponse.Errors = err.Error()
+func validationError(c *fiber.Ctx, err FailedValidationError) error {
+	globalResponse.Message = err.Msg
+	globalResponse.Errors = err.Errors
 
 	log.Println(err.Error())
-	return c.Status(fiber.StatusBadRequest).JSON(&globalResponse)
+	return c.Status(err.GetCode()).JSON(&globalResponse)
 }
 
 func baseError(c *fiber.Ctx, err GlobalError) error {

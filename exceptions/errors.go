@@ -1,6 +1,10 @@
 package exceptions
 
-import "net/http"
+import (
+	"github.com/go-playground/validator/v10"
+	"net/http"
+	"reflect"
+)
 
 type GlobalError interface {
 	Error() string
@@ -119,4 +123,35 @@ func (f HttpNotFoundError) GetCode() int {
 
 func NewHttpNotFoundError(msg string) HttpNotFoundError {
 	return HttpNotFoundError{Msg: msg, Code: http.StatusNotFound}
+}
+
+type FailedValidationError struct {
+	Msg    string
+	Code   int
+	Errors map[string]IError
+}
+
+func (f FailedValidationError) Error() string {
+	return f.Msg
+}
+
+func (f FailedValidationError) GetCode() int {
+	return f.Code
+}
+
+func NewFailedValidationError(obj interface{}, err validator.ValidationErrors) FailedValidationError {
+
+	objRef := reflect.TypeOf(obj)
+
+	errMsgs := make(map[string]IError)
+
+	for _, err := range err {
+		structField, _ := objRef.FieldByName(err.Field())
+		errMsgs[structField.Tag.Get("json")] = IError{
+			Tag:     err.Tag(),
+			Message: "Invalid value with tag " + err.Tag(),
+		}
+	}
+
+	return FailedValidationError{Msg: "Failed Validation", Code: http.StatusUnprocessableEntity, Errors: errMsgs}
 }

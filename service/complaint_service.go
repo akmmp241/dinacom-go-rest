@@ -51,7 +51,7 @@ func NewComplaintService(
 func (A ComplaintServiceImpl) Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error) {
 	err := A.Validate.Struct(req)
 	if err != nil {
-		return nil, err
+		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
 	}
 
 	generativeModel, err := config.InitModel(A.AIClient.Genai, A.Cnf, config.Simplifier)
@@ -82,7 +82,7 @@ func (A ComplaintServiceImpl) Simplifier(ctx context.Context, req *model.Simplif
 func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.ComplaintRequest, user *model.User) (*model.ComplaintResponse, error) {
 	err := A.Validate.Struct(req)
 	if err != nil {
-		return nil, err
+		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
 	}
 
 	generativeModel, err := config.InitModel(A.AIClient.Genai, A.Cnf, config.ExternalWound)
