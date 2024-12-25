@@ -29,6 +29,7 @@ type AuthService interface {
 	Me(ctx context.Context, token string) (*model.MeResponse, error)
 	ForgetPassword(ctx context.Context, req model.ForgetPasswordRequest) error
 	VerifyForgetPasswordOtp(ctx context.Context, req model.VerifyForgetPasswordOtpRequest) (*model.VerifyForgetPasswordOtpResponse, error)
+	ResetPassword(ctx context.Context, req model.ResetPasswordRequest) (*model.ResetPasswordResponse, error)
 }
 
 type AuthServiceImpl struct {
@@ -297,4 +298,32 @@ func (s AuthServiceImpl) VerifyForgetPasswordOtp(ctx context.Context, req model.
 	}
 
 	return &verifyForgetPasswordOtpResponse, nil
+}
+
+func (s AuthServiceImpl) ResetPassword(ctx context.Context, req model.ResetPasswordRequest) (*model.ResetPasswordResponse, error) {
+	err := s.Validate.Struct(req)
+	if err != nil {
+		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
+	}
+
+	hashPassword, err := helpers.HashPassword(req.Password)
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+	_, err = s.UserRepo.UpdatePassword(ctx, tx, req.Email, hashPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = tx.Commit()
+
+	resetPasswordResponse := model.ResetPasswordResponse{
+		Message: "Success Reset Password",
+	}
+	return &resetPasswordResponse, nil
 }

@@ -97,3 +97,13 @@ type VerifyForgetPasswordOtpResponse struct {
 	Email              string `json:"email"`
 	ResetPasswordToken string `json:"reset_password_token"`
 }
+
+type ResetPasswordRequest struct {
+	Email                string `json:"email" validate:"required,email"`
+	Password             string `json:"password" validate:"required,min=8,max=255"`
+	PasswordConfirmation string `json:"password_confirmation" validate:"required,eqfield=Password"`
+}
+
+type ResetPasswordResponse struct {
+	Message string `json:"message"`
+}

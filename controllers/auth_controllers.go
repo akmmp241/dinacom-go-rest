@@ -13,6 +13,7 @@ type AuthController interface {
 	Me(c *fiber.Ctx) error
 	ForgetPassword(c *fiber.Ctx) error
 	VerifyForgetPasswordOtp(c *fiber.Ctx) error
+	ResetPassword(c *fiber.Ctx) error
 }
 
 type AuthControllerImpl struct {
@@ -117,6 +118,26 @@ func (con *AuthControllerImpl) VerifyForgetPasswordOtp(c *fiber.Ctx) error {
 	globalResponse := model.GlobalResponse{
 		Message: "Forget password otp verified",
 		Data:    verifyForgetPasswordOtpResponse,
+		Errors:  nil,
+	}
+
+	return c.JSON(&globalResponse)
+}
+
+func (con *AuthControllerImpl) ResetPassword(c *fiber.Ctx) error {
+	resetPasswordRequest := &model.ResetPasswordRequest{}
+	err := c.BodyParser(resetPasswordRequest)
+	if err != nil {
+		return exceptions.NewBadRequestError("Invalid request body")
+	}
+
+	message, err := con.AuthService.ResetPassword(c.Context(), *resetPasswordRequest)
+	if err != nil {
+		return err
+	}
+	globalResponse := model.GlobalResponse{
+		Message: message.Message,
+		Data:    nil,
 		Errors:  nil,
 	}
 
