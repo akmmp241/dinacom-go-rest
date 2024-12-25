@@ -81,12 +81,7 @@ type GeminiComplaintResponse struct {
 type ComplaintResponse struct {
 	ComplaintId string                  `json:"complaint_id"`
 	Response    GeminiComplaintResponse `json:"response"`
-}
-
-type GetComplaintResponse struct {
-	Id             string `json:"id"`
-	SuggestedTitle string `json:"suggested_title"`
-	ComplaintsMsg  string `json:"complaints_msg"`
+	ImageUrl    string                  `json:"image_url"`
 }
 
 type ForgetPasswordRequest struct {
