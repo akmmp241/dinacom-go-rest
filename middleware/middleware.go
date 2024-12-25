@@ -9,11 +9,13 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 	"time"
 )
 
 type Middleware interface {
 	Authenticate(c *fiber.Ctx) error
+	SendOtpMailRateLimiter(c *fiber.Ctx) error
 }
 
 type MiddlewareImpl struct {
@@ -21,6 +23,7 @@ type MiddlewareImpl struct {
 	UserRepo    repository.UserRepository
 	Cnf         *config.Config
 	DB          *sql.DB
+	RedisClient *redis.Client
 }
 
 func NewMiddleware(
@@ -28,12 +31,14 @@ func NewMiddleware(
 	sessionRepo repository.SessionRepository,
 	userRepo repository.UserRepository,
 	db *sql.DB,
+	redisClient *redis.Client,
 ) *MiddlewareImpl {
 	return &MiddlewareImpl{
 		Cnf:         cnf,
 		SessionRepo: sessionRepo,
 		UserRepo:    userRepo,
 		DB:          db,
+		RedisClient: redisClient,
 	}
 }
 
@@ -75,6 +80,25 @@ func (i *MiddlewareImpl) Authenticate(c *fiber.Ctx) error {
 
 	ctx := context.WithValue(c.UserContext(), "user", user)
 	c.SetUserContext(ctx)
+
+	return c.Next()
+}
+
+func (i *MiddlewareImpl) SendOtpMailRateLimiter(c *fiber.Ctx) error {
+	ip := c.IP()
+	key := "send_otp_mail:" + ip
+	err := i.RedisClient.Get(c.Context(), key).Err()
+	if err == nil {
+		return &fiber.Error{
+			Code:    fiber.StatusTooManyRequests,
+			Message: "Too many requests",
+		}
+	}
+
+	err = i.RedisClient.Set(c.Context(), key, 1, 1*time.Minute).Err()
+	if err != nil {
+		return exceptions.NewInternalServerError()
+	}
 
 	return c.Next()
 }

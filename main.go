@@ -33,7 +33,7 @@ func main() {
 	authController := controllers.NewAuthController(authService)
 	complaintController := controllers.NewComplaintController(complaintService)
 
-	mw := middleware.NewMiddleware(cnf, sessionRepo, userRepo, db)
+	mw := middleware.NewMiddleware(cnf, sessionRepo, userRepo, db, redis)
 
 	fiberApp := app.NewRouter(mw, authController, complaintController)
 
