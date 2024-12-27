@@ -5,12 +5,14 @@ import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/model"
 	"context"
 	"database/sql"
+	"errors"
 )
 
 type UserRepository interface {
 	Save(ctx context.Context, tx *sql.Tx, user *model.User) (*model.User, error)
 	FindByEmail(ctx context.Context, tx *sql.Tx, email string) (*model.User, error)
 	FindById(ctx context.Context, tx *sql.Tx, id int) (*model.User, error)
+	UpdatePassword(ctx context.Context, tx *sql.Tx, email string, password string) (*model.User, error)
 }
 
 type UserRepositoryImpl struct {
@@ -76,4 +78,23 @@ func (u UserRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, id int) (*
 	}
 
 	return &user, nil
+}
+
+func (u UserRepositoryImpl) UpdatePassword(ctx context.Context, tx *sql.Tx, email string, password string) (*model.User, error) {
+	user, err := u.FindByEmail(ctx, tx, email)
+	if err != nil && errors.Is(err, exceptions.NotFoundError{}) {
+		return nil, exceptions.NewHttpConflictError("Invalid Credentials")
+	} else if err != nil && !errors.Is(err, exceptions.NotFoundError{}) {
+		return nil, err
+	}
+
+	query := "UPDATE users SET password = ? WHERE email = ?"
+	_, err = tx.ExecContext(ctx, query, password, email)
+
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	user.Password = password
+	return user, nil
 }

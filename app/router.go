@@ -26,6 +26,9 @@ func NewRouter(
 	auth.Post("/register", authController.Register)
 	auth.Post("/login", authController.Login)
 	auth.Get("/me", authController.Me)
+	auth.Use(middleware.SendOtpMailRateLimiter).Post("/forget/password", authController.ForgetPassword)
+	auth.Post("/forget/password/verify", authController.VerifyForgetPasswordOtp)
+	auth.Post("/reset/password", authController.ResetPassword)
 
 	authApi := api.Use(middleware.Authenticate)
 	authApi.Post("/ai/simplify", complaintController.Simplifier)

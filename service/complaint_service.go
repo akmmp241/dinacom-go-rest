@@ -154,6 +154,7 @@ func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.Comp
 	externalWoundResponse := model.ComplaintResponse{
 		ComplaintId: generatedId,
 		Response:    geminiComplaintResponse,
+		ImageUrl:    location,
 	}
 
 	return &externalWoundResponse, nil
@@ -185,6 +186,7 @@ func (A ComplaintServiceImpl) GetById(ctx context.Context, complaintId string, u
 	complaintResponse := model.ComplaintResponse{
 		ComplaintId: complaint.Id,
 		Response:    geminiComplaintResponse,
+		ImageUrl:    complaint.ImageUrl,
 	}
 
 	return &complaintResponse, nil
@@ -212,6 +214,7 @@ func (A ComplaintServiceImpl) GetAll(ctx context.Context, user *model.User) (*[]
 		complaintResponse := model.ComplaintResponse{
 			ComplaintId: complaint.Id,
 			Response:    geminiComplaintResponse,
+			ImageUrl:    complaint.ImageUrl,
 		}
 		complaintResponses = append(complaintResponses, complaintResponse)
 	}

@@ -81,10 +81,29 @@ type GeminiComplaintResponse struct {
 type ComplaintResponse struct {
 	ComplaintId string                  `json:"complaint_id"`
 	Response    GeminiComplaintResponse `json:"response"`
+	ImageUrl    string                  `json:"image_url"`
 }
 
-type GetComplaintResponse struct {
-	Id             string `json:"id"`
-	SuggestedTitle string `json:"suggested_title"`
-	ComplaintsMsg  string `json:"complaints_msg"`
+type ForgetPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type VerifyForgetPasswordOtpRequest struct {
+	Email string `json:"email" validate:"required,email"`
+	Otp   string `json:"otp" validate:"required"`
+}
+
+type VerifyForgetPasswordOtpResponse struct {
+	Email              string `json:"email"`
+	ResetPasswordToken string `json:"reset_password_token"`
+}
+
+type ResetPasswordRequest struct {
+	Email                string `json:"email" validate:"required,email"`
+	Password             string `json:"password" validate:"required,min=8,max=255"`
+	PasswordConfirmation string `json:"password_confirmation" validate:"required,eqfield=Password"`
+}
+
+type ResetPasswordResponse struct {
+	Message string `json:"message"`
 }
