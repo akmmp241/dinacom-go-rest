@@ -76,7 +76,6 @@ func (s AuthServiceImpl) Register(ctx context.Context, req model.RegisterRequest
 	hashedPassword, err := helpers.HashPassword(req.Password)
 
 	user = &model.User{
-		Name:     req.Name,
 		Email:    req.Email,
 		Password: hashedPassword,
 	}
@@ -109,7 +108,6 @@ func (s AuthServiceImpl) Register(ctx context.Context, req model.RegisterRequest
 
 	return &model.RegisterResponse{
 		Id:    user.Id,
-		Name:  user.Name,
 		Email: user.Email,
 		Token: encryptedToken,
 	}, nil
@@ -160,7 +158,6 @@ func (s AuthServiceImpl) Login(ctx context.Context, req model.LoginRequest) (*mo
 
 	return &model.LoginResponse{
 		Id:    user.Id,
-		Name:  user.Name,
 		Email: user.Email,
 		Token: encryptedToken,
 	}, nil
@@ -199,7 +196,6 @@ func (s AuthServiceImpl) Me(ctx context.Context, token string) (*model.MeRespons
 
 	return &model.MeResponse{
 		Id:    user.Id,
-		Name:  user.Name,
 		Email: user.Email,
 	}, nil
 }
