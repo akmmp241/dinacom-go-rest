@@ -61,19 +61,12 @@ type ComplaintRequest struct {
 	Image     *multipart.FileHeader `json:"image" validate:"required"`
 }
 
-type ExternalWoundDetails struct {
-	Symptoms    string `json:"symptoms"`
-	Handling    string `json:"handling"`
-	Drug        string `json:"drug"`
-	Reason      string `json:"reason"`
-	Precautions string `json:"precautions"`
-}
-
 type GeminiComplaintResponse struct {
-	Overview       string               `json:"overview"`
-	Conclusion     string               `json:"conclusion"`
-	SuggestedTitle string               `json:"suggested_title"`
-	Details        ExternalWoundDetails `json:"details"`
+	SuggestedTitle      string `json:"suggested_title"`
+	ConditionIdentified string `json:"condition_identified"`
+	PotentialCauses     string `json:"potential_causes"`
+	RecommendedActions  string `json:"recommended_actions"`
+	Urgency             string `json:"urgency"`
 }
 
 type ComplaintResponse struct {
