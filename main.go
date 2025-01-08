@@ -7,7 +7,6 @@ import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/middleware"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/repository"
 	"akmmp241/dinamcom-2024/dinacom-go-rest/service"
-	_ "embed"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -26,9 +25,10 @@ func main() {
 	userRepo := repository.NewUserRepository()
 	sessionRepo := repository.NewSessionRepository()
 	complaintRepo := repository.NewComplaintRepository()
+	drugRepo := repository.NewDrugRepository()
 
 	authService := service.NewAuthService(userRepo, sessionRepo, db, validate, cnf, redis, mailer)
-	complaintService := service.NewComplaintService(validate, cnf, aiClient, awsClient, complaintRepo, db)
+	complaintService := service.NewComplaintService(validate, cnf, aiClient, awsClient, complaintRepo, db, drugRepo)
 
 	authController := controllers.NewAuthController(authService)
 	complaintController := controllers.NewComplaintController(complaintService)

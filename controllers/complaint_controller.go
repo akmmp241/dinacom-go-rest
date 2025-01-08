@@ -12,6 +12,7 @@ type ComplaintController interface {
 	ExternalWound(ctx *fiber.Ctx) error
 	GetById(ctx *fiber.Ctx) error
 	GetAll(ctx *fiber.Ctx) error
+	GetRecommendedDrugs(ctx *fiber.Ctx) error
 }
 
 type ComplaintControllerImpl struct {
@@ -100,6 +101,28 @@ func (A ComplaintControllerImpl) GetAll(ctx *fiber.Ctx) error {
 
 	globalResponse := model.GlobalResponse{
 		Message: "Get all complaint success",
+		Data:    resp,
+		Errors:  nil,
+	}
+
+	return ctx.JSON(&globalResponse)
+}
+
+func (A ComplaintControllerImpl) GetRecommendedDrugs(ctx *fiber.Ctx) error {
+	complaintId := ctx.Params("complaintId")
+	if complaintId == "" {
+		return exceptions.NewBadRequestError("Complaint id is required")
+	}
+
+	user := ctx.UserContext().Value("user").(*model.User)
+
+	resp, err := A.ComplaintService.GetDrugRecommendations(ctx.Context(), complaintId, user)
+	if err != nil {
+		return err
+	}
+
+	globalResponse := model.GlobalResponse{
+		Message: "Get recommended drugs success",
 		Data:    resp,
 		Errors:  nil,
 	}

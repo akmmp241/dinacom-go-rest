@@ -105,3 +105,12 @@ type ResetPasswordRequest struct {
 type ResetPasswordResponse struct {
 	Message string `json:"message"`
 }
+
+type RecommendedDrugsResponse struct {
+	Id          int     `json:"id"`
+	BrandName   string  `json:"brand_name"`
+	Name        string  `json:"name"`
+	Price       float32 `json:"price"`
+	Description string  `json:"description"`
+	ImageUrl    string  `json:"image_url"`
+}

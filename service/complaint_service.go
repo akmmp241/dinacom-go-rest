@@ -24,6 +24,7 @@ type ComplaintService interface {
 	ExternalWound(ctx context.Context, req *model.ComplaintRequest, user *model.User) (*model.ComplaintResponse, error)
 	GetById(ctx context.Context, complaintId string, user *model.User) (*model.ComplaintResponse, error)
 	GetAll(ctx context.Context, user *model.User) (*[]model.ComplaintResponse, error)
+	GetDrugRecommendations(ctx context.Context, complaintId string, user *model.User) (*[]model.RecommendedDrugsResponse, error)
 }
 
 type ComplaintServiceImpl struct {
@@ -33,6 +34,7 @@ type ComplaintServiceImpl struct {
 	AWSClient     *config.AWSClient
 	DB            *sql.DB
 	ComplaintRepo repository.ComplaintRepository
+	DrugRepo      repository.DrugRepository
 }
 
 func NewComplaintService(
@@ -42,6 +44,7 @@ func NewComplaintService(
 	awsClient *config.AWSClient,
 	complaintRepo repository.ComplaintRepository,
 	db *sql.DB,
+	drugRepo repository.DrugRepository,
 ) ComplaintService {
 	return &ComplaintServiceImpl{
 		Validate:      validate,
@@ -50,6 +53,7 @@ func NewComplaintService(
 		AWSClient:     awsClient,
 		ComplaintRepo: complaintRepo,
 		DB:            db,
+		DrugRepo:      drugRepo,
 	}
 }
 
@@ -220,6 +224,45 @@ func (A ComplaintServiceImpl) GetAll(ctx context.Context, user *model.User) (*[]
 	}
 
 	return &complaintResponses, nil
+}
+
+func (A ComplaintServiceImpl) GetDrugRecommendations(ctx context.Context, complaintId string, user *model.User) (*[]model.RecommendedDrugsResponse, error) {
+	tx, err := A.DB.Begin()
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	complaint, err := A.ComplaintRepo.FindById(ctx, tx, complaintId)
+	if err != nil {
+		if errors.Is(err, exceptions.NotFoundError{}) {
+			return nil, exceptions.NewHttpNotFoundError("Complaint not found")
+		}
+		return nil, err
+	}
+
+	if complaint.UserId != user.Id {
+		return nil, exceptions.NewForbiddenError("You are not authorized to access this complaint")
+	}
+
+	drugs, err := A.DrugRepo.FindAll(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	var recommendedDrugs []model.RecommendedDrugsResponse
+	for _, drug := range drugs {
+		recommendedDrug := model.RecommendedDrugsResponse{
+			Id:          drug.Id,
+			BrandName:   drug.BrandName,
+			Name:        drug.Name,
+			Description: drug.Description,
+			Price:       drug.Price,
+			ImageUrl:    drug.ImageUrl,
+		}
+		recommendedDrugs = append(recommendedDrugs, recommendedDrug)
+	}
+
+	return &recommendedDrugs, nil
 }
 
 func uploadFilesConcurrently(ctx context.Context, req *model.ComplaintRequest, A ComplaintServiceImpl) (fileURIs string, location string, err error) {
