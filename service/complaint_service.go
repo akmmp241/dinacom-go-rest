@@ -25,6 +25,7 @@ type ComplaintService interface {
 	GetById(ctx context.Context, complaintId string, user *model.User) (*model.ComplaintResponse, error)
 	GetAll(ctx context.Context, user *model.User) (*[]model.ComplaintResponse, error)
 	GetDrugRecommendations(ctx context.Context, complaintId string, user *model.User) (*[]model.RecommendedDrugsResponse, error)
+	Update(ctx context.Context, req model.UpdateComplaintRequest, complaintId string, user *model.User) (*model.ComplaintResponse, error)
 }
 
 type ComplaintServiceImpl struct {
@@ -157,6 +158,7 @@ func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.Comp
 
 	externalWoundResponse := model.ComplaintResponse{
 		ComplaintId: generatedId,
+		Title:       geminiComplaintResponse.SuggestedTitle,
 		Response:    geminiComplaintResponse,
 		ImageUrl:    location,
 	}
@@ -189,6 +191,7 @@ func (A ComplaintServiceImpl) GetById(ctx context.Context, complaintId string, u
 
 	complaintResponse := model.ComplaintResponse{
 		ComplaintId: complaint.Id,
+		Title:       complaint.Title,
 		Response:    geminiComplaintResponse,
 		ImageUrl:    complaint.ImageUrl,
 	}
@@ -217,6 +220,7 @@ func (A ComplaintServiceImpl) GetAll(ctx context.Context, user *model.User) (*[]
 
 		complaintResponse := model.ComplaintResponse{
 			ComplaintId: complaint.Id,
+			Title:       complaint.Title,
 			Response:    geminiComplaintResponse,
 			ImageUrl:    complaint.ImageUrl,
 		}
@@ -263,6 +267,54 @@ func (A ComplaintServiceImpl) GetDrugRecommendations(ctx context.Context, compla
 	}
 
 	return &recommendedDrugs, nil
+}
+
+func (A ComplaintServiceImpl) Update(ctx context.Context, req model.UpdateComplaintRequest, complaintId string, user *model.User) (*model.ComplaintResponse, error) {
+	err := A.Validate.Struct(&req)
+	if err != nil {
+		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
+	}
+
+	tx, err := A.DB.Begin()
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	complaint, err := A.ComplaintRepo.FindById(ctx, tx, complaintId)
+	if err != nil {
+		if errors.Is(err, exceptions.NotFoundError{}) {
+			return nil, exceptions.NewHttpNotFoundError("Complaint not found")
+		}
+		return nil, err
+	}
+
+	if complaint.UserId != user.Id {
+		return nil, exceptions.NewForbiddenError("You are not authorized to update this complaint")
+	}
+
+	complaint.Title = req.SuggestedTitle
+
+	_, err = A.ComplaintRepo.Update(ctx, tx, complaint)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, err
+	}
+	_ = tx.Commit()
+
+	var geminiComplaintResponse model.GeminiComplaintResponse
+	err = json.Unmarshal([]byte(complaint.Response), &geminiComplaintResponse)
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	complaintResponse := model.ComplaintResponse{
+		ComplaintId: complaint.Id,
+		Title:       complaint.Title,
+		Response:    geminiComplaintResponse,
+		ImageUrl:    complaint.ImageUrl,
+	}
+
+	return &complaintResponse, nil
 }
 
 func uploadFilesConcurrently(ctx context.Context, req *model.ComplaintRequest, A ComplaintServiceImpl) (fileURIs string, location string, err error) {

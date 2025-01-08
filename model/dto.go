@@ -71,6 +71,7 @@ type GeminiComplaintResponse struct {
 
 type ComplaintResponse struct {
 	ComplaintId string                  `json:"complaint_id"`
+	Title       string                  `json:"title"`
 	Response    GeminiComplaintResponse `json:"response"`
 	ImageUrl    string                  `json:"image_url"`
 }
@@ -106,4 +107,8 @@ type RecommendedDrugsResponse struct {
 	Price       float32 `json:"price"`
 	Description string  `json:"description"`
 	ImageUrl    string  `json:"image_url"`
+}
+
+type UpdateComplaintRequest struct {
+	SuggestedTitle string `json:"suggested_title" validate:"required"`
 }
