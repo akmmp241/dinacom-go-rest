@@ -37,6 +37,7 @@ func NewRouter(
 	complaint.Post("/", complaintController.ExternalWound)
 	complaint.Get("/", complaintController.GetAll)
 	complaint.Get("/:complaintId", complaintController.GetById)
+	complaint.Get("/:complaintId/recommendations", complaintController.GetRecommendedDrugs)
 
 	return appRouter
 }

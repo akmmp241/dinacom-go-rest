@@ -24,3 +24,12 @@ type Complaint struct {
 	ImageUrl      string
 	CreatedAt     time.Time
 }
+
+type Drug struct {
+	Id          int
+	BrandName   string
+	Name        string
+	Description string
+	Price       float32
+	ImageUrl    string
+}
