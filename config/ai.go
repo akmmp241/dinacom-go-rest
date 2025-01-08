@@ -73,31 +73,17 @@ func externalWoundConfig(generativeModel *genai.GenerativeModel) {
 			"suggested_title": {
 				Type: genai.TypeString,
 			},
-			"overview": {
+			"condition_identified": {
 				Type: genai.TypeString,
 			},
-			"conclusion": {
+			"potential_causes": {
 				Type: genai.TypeString,
 			},
-			"details": {
-				Type: genai.TypeObject,
-				Properties: map[string]*genai.Schema{
-					"symptoms": {
-						Type: genai.TypeString,
-					},
-					"handling": {
-						Type: genai.TypeString,
-					},
-					"drug": {
-						Type: genai.TypeString,
-					},
-					"reason": {
-						Type: genai.TypeString,
-					},
-					"precautions": {
-						Type: genai.TypeString,
-					},
-				},
+			"recommended_actions": {
+				Type: genai.TypeString,
+			},
+			"urgency": {
+				Type: genai.TypeString,
 			},
 		},
 	}

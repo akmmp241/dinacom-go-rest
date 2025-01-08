@@ -11,6 +11,7 @@ type ComplaintRepository interface {
 	Save(ctx context.Context, tx *sql.Tx, complaints *model.Complaint) (*model.Complaint, error)
 	FindAll(ctx context.Context, tx *sql.Tx, userId int) ([]model.Complaint, error)
 	FindById(ctx context.Context, tx *sql.Tx, id string) (*model.Complaint, error)
+	Update(ctx context.Context, tx *sql.Tx, complaints *model.Complaint) (*model.Complaint, error)
 }
 
 type ComplaintRepositoryImpl struct {
@@ -70,4 +71,14 @@ func (c ComplaintRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, id st
 	}
 
 	return &complaint, nil
+}
+
+func (c ComplaintRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, complaints *model.Complaint) (*model.Complaint, error) {
+	query := `UPDATE complaints SET title = ?, complaints = ?, response = ?, image_url = ? WHERE id = ?`
+	_, err := tx.ExecContext(ctx, query, &complaints.Title, &complaints.ComplaintsMsg, &complaints.Response, &complaints.ImageUrl, &complaints.Id)
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	return complaints, nil
 }

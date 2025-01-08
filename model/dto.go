@@ -61,23 +61,17 @@ type ComplaintRequest struct {
 	Image     *multipart.FileHeader `json:"image" validate:"required"`
 }
 
-type ExternalWoundDetails struct {
-	Symptoms    string `json:"symptoms"`
-	Handling    string `json:"handling"`
-	Drug        string `json:"drug"`
-	Reason      string `json:"reason"`
-	Precautions string `json:"precautions"`
-}
-
 type GeminiComplaintResponse struct {
-	Overview       string               `json:"overview"`
-	Conclusion     string               `json:"conclusion"`
-	SuggestedTitle string               `json:"suggested_title"`
-	Details        ExternalWoundDetails `json:"details"`
+	SuggestedTitle      string `json:"suggested_title"`
+	ConditionIdentified string `json:"condition_identified"`
+	PotentialCauses     string `json:"potential_causes"`
+	RecommendedActions  string `json:"recommended_actions"`
+	Urgency             string `json:"urgency"`
 }
 
 type ComplaintResponse struct {
 	ComplaintId string                  `json:"complaint_id"`
+	Title       string                  `json:"title"`
 	Response    GeminiComplaintResponse `json:"response"`
 	ImageUrl    string                  `json:"image_url"`
 }
@@ -104,4 +98,17 @@ type ResetPasswordRequest struct {
 
 type ResetPasswordResponse struct {
 	Message string `json:"message"`
+}
+
+type RecommendedDrugsResponse struct {
+	Id          int     `json:"id"`
+	BrandName   string  `json:"brand_name"`
+	Name        string  `json:"name"`
+	Price       float32 `json:"price"`
+	Description string  `json:"description"`
+	ImageUrl    string  `json:"image_url"`
+}
+
+type UpdateComplaintRequest struct {
+	SuggestedTitle string `json:"suggested_title" validate:"required"`
 }

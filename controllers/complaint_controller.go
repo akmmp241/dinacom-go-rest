@@ -12,6 +12,8 @@ type ComplaintController interface {
 	ExternalWound(ctx *fiber.Ctx) error
 	GetById(ctx *fiber.Ctx) error
 	GetAll(ctx *fiber.Ctx) error
+	GetRecommendedDrugs(ctx *fiber.Ctx) error
+	Update(ctx *fiber.Ctx) error
 }
 
 type ComplaintControllerImpl struct {
@@ -100,6 +102,56 @@ func (A ComplaintControllerImpl) GetAll(ctx *fiber.Ctx) error {
 
 	globalResponse := model.GlobalResponse{
 		Message: "Get all complaint success",
+		Data:    resp,
+		Errors:  nil,
+	}
+
+	return ctx.JSON(&globalResponse)
+}
+
+func (A ComplaintControllerImpl) GetRecommendedDrugs(ctx *fiber.Ctx) error {
+	complaintId := ctx.Params("complaintId")
+	if complaintId == "" {
+		return exceptions.NewBadRequestError("Complaint id is required")
+	}
+
+	user := ctx.UserContext().Value("user").(*model.User)
+
+	resp, err := A.ComplaintService.GetDrugRecommendations(ctx.Context(), complaintId, user)
+	if err != nil {
+		return err
+	}
+
+	globalResponse := model.GlobalResponse{
+		Message: "Get recommended drugs success",
+		Data:    resp,
+		Errors:  nil,
+	}
+
+	return ctx.JSON(&globalResponse)
+}
+
+func (A ComplaintControllerImpl) Update(ctx *fiber.Ctx) error {
+	complaintId := ctx.Params("complaintId")
+	if complaintId == "" {
+		return exceptions.NewBadRequestError("Complaint id is required")
+	}
+
+	req := &model.UpdateComplaintRequest{}
+	err := ctx.BodyParser(req)
+	if err != nil {
+		return exceptions.NewBadRequestError("Invalid request body")
+	}
+
+	user := ctx.UserContext().Value("user").(*model.User)
+
+	resp, err := A.ComplaintService.Update(ctx.Context(), *req, complaintId, user)
+	if err != nil {
+		return err
+	}
+
+	globalResponse := model.GlobalResponse{
+		Message: "Update complaint success",
 		Data:    resp,
 		Errors:  nil,
 	}
