@@ -84,7 +84,7 @@ func (A ComplaintServiceImpl) Simplifier(ctx context.Context, req *model.Simplif
 	}
 
 	return &model.SimplifyResponse{
-		Message:       req.Message,
+		Complaint:     req.Message,
 		SimplifiedMsg: simplifiedMsg,
 	}, nil
 }

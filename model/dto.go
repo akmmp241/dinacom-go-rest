@@ -52,7 +52,7 @@ type SimplifyRequest struct {
 }
 
 type SimplifyResponse struct {
-	Message       string `json:"message"`
+	Complaint     string `json:"complaint"`
 	SimplifiedMsg string `json:"simplified_msg"`
 }
 
