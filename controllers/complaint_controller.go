@@ -27,7 +27,7 @@ func (A ComplaintControllerImpl) Simplifier(ctx *fiber.Ctx) error {
 		return exceptions.NewBadRequestError("Invalid request body")
 	}
 
-	resp, err := A.ComplaintService.Simplifier(ctx.Context(), simplifyRequest)
+	resp, err := A.ComplaintService.Simplifier(ctx.Context(), *simplifyRequest)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (A ComplaintControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 
 	user := ctx.UserContext().Value("user").(*model.User)
 
-	resp, err := A.ComplaintService.ExternalWound(ctx.Context(), req, user)
+	resp, err := A.ComplaintService.ExternalWound(ctx.Context(), *req, user)
 	if err != nil {
 		return err
 	}

@@ -20,8 +20,8 @@ import (
 )
 
 type ComplaintService interface {
-	Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error)
-	ExternalWound(ctx context.Context, req *model.ComplaintRequest, user *model.User) (*model.ComplaintResponse, error)
+	Simplifier(ctx context.Context, req model.SimplifyRequest) (*model.SimplifyResponse, error)
+	ExternalWound(ctx context.Context, req model.ComplaintRequest, user *model.User) (*model.ComplaintResponse, error)
 	GetById(ctx context.Context, complaintId string, user *model.User) (*model.ComplaintResponse, error)
 	GetAll(ctx context.Context, user *model.User) (*[]model.ComplaintResponse, error)
 	GetDrugRecommendations(ctx context.Context, complaintId string, user *model.User) (*[]model.RecommendedDrugsResponse, error)
@@ -58,7 +58,7 @@ func NewComplaintService(
 	}
 }
 
-func (A ComplaintServiceImpl) Simplifier(ctx context.Context, req *model.SimplifyRequest) (*model.SimplifyResponse, error) {
+func (A ComplaintServiceImpl) Simplifier(ctx context.Context, req model.SimplifyRequest) (*model.SimplifyResponse, error) {
 	err := A.Validate.Struct(req)
 	if err != nil {
 		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
@@ -89,7 +89,7 @@ func (A ComplaintServiceImpl) Simplifier(ctx context.Context, req *model.Simplif
 	}, nil
 }
 
-func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.ComplaintRequest, user *model.User) (*model.ComplaintResponse, error) {
+func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req model.ComplaintRequest, user *model.User) (*model.ComplaintResponse, error) {
 	err := A.Validate.Struct(req)
 	if err != nil {
 		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
@@ -101,7 +101,7 @@ func (A ComplaintServiceImpl) ExternalWound(ctx context.Context, req *model.Comp
 	}
 
 	// upload to gemini and s3 concurrently
-	fileURIs, location, err := uploadFilesConcurrently(ctx, req, A)
+	fileURIs, location, err := uploadFilesConcurrently(ctx, &req, A)
 	if err != nil {
 		return nil, err
 	}
