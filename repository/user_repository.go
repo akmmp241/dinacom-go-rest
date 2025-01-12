@@ -6,7 +6,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 )
 
 type UserRepository interface {
@@ -43,8 +42,6 @@ func (u UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.Tx, email s
 	query := `SELECT id, email, password, provider FROM users WHERE email = ?`
 	rows, err := tx.QueryContext(ctx, query, email)
 	if err != nil {
-		log.Println("here1")
-		log.Println(err)
 		return nil, exceptions.NewInternalServerError()
 	}
 	defer rows.Close()
@@ -56,8 +53,6 @@ func (u UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.Tx, email s
 
 	err = rows.Scan(&user.Id, &user.Email, &user.Password, &user.Provider)
 	if err != nil {
-		log.Println("here2")
-		log.Println(err)
 		return nil, exceptions.NewInternalServerError()
 	}
 
