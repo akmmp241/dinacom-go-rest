@@ -31,12 +31,11 @@ func NewRouter(
 	auth.Post("/forget/password/verify", authController.VerifyForgetPasswordOtp)
 	auth.Post("/reset/password", authController.ResetPassword)
 
-	api.Post("/ai/simplify", middleware.Authenticate, complaintController.Simplifier)
-
 	complaint := api.Group("/complaints")
 	complaint.Use(middleware.Authenticate)
 	complaint.Post("/", complaintController.ExternalWound)
 	complaint.Get("/", complaintController.GetAll)
+	complaint.Get("/simplify", complaintController.Simplifier)
 	complaint.Get("/:complaintId", complaintController.GetById)
 	complaint.Put("/:complaintId", complaintController.Update)
 	complaint.Get("/:complaintId/recommendations", complaintController.GetRecommendedDrugs)
