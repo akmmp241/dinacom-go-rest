@@ -3,8 +3,10 @@ package exceptions
 import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/model"
 	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"log"
+	"strings"
 )
 
 type IError struct {
@@ -57,4 +59,26 @@ func internalServerError(c *fiber.Ctx) error {
 	globalResponse.Errors = nil
 
 	return c.Status(fiber.StatusInternalServerError).JSON(&globalResponse)
+}
+
+func handleValidationErrorMessage(tag string, param string, field string) string {
+	var msg string
+	switch tag {
+	case "required":
+		msg = fmt.Sprintf("The %s field is required", field)
+	case "email":
+		msg = "This is not a valid email"
+	case "min":
+		msg = fmt.Sprintf("The %s field must be at least %s characters", strings.ToLower(param), tag)
+	case "max":
+		msg = fmt.Sprintf("The %s field must be at most %s characters", strings.ToLower(param), tag)
+	case "eqfield":
+		if param == "Password" {
+			msg = "The password confirmation does not match"
+		} else {
+			msg = "The field does not match"
+		}
+	}
+
+	return msg
 }

@@ -128,7 +128,7 @@ func NewHttpNotFoundError(msg string) HttpNotFoundError {
 type FailedValidationError struct {
 	Msg    string
 	Code   int
-	Errors map[string]IError
+	Errors map[string]interface{}
 }
 
 func (f FailedValidationError) Error() string {
@@ -143,14 +143,17 @@ func NewFailedValidationError(obj interface{}, err validator.ValidationErrors) F
 
 	objRef := reflect.TypeOf(obj)
 
-	errMsgs := make(map[string]IError)
+	errMsgs := make(map[string]interface{})
+
+	for i := 0; i < objRef.NumField(); i++ {
+		structField := objRef.Field(i)
+		errMsgs[structField.Tag.Get("json")] = nil
+	}
 
 	for _, err := range err {
 		structField, _ := objRef.FieldByName(err.Field())
-		errMsgs[structField.Tag.Get("json")] = IError{
-			Tag:     err.Tag(),
-			Message: "Invalid value with tag " + err.Tag(),
-		}
+		field := structField.Tag.Get("json")
+		errMsgs[field] = handleValidationErrorMessage(err.Tag(), err.Param(), err.Field())
 	}
 
 	return FailedValidationError{Msg: "Failed Validation", Code: http.StatusUnprocessableEntity, Errors: errMsgs}
