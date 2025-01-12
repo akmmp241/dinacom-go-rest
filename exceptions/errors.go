@@ -153,7 +153,7 @@ func NewFailedValidationError(obj interface{}, err validator.ValidationErrors) F
 	for _, err := range err {
 		structField, _ := objRef.FieldByName(err.Field())
 		field := structField.Tag.Get("json")
-		errMsgs[field] = handleValidationErrorMessage(err.Tag(), err.Param(), err.Field())
+		errMsgs[field] = handleValidationErrorMessage(err.Tag(), err.Param(), field)
 	}
 
 	return FailedValidationError{Msg: "Failed Validation", Code: http.StatusUnprocessableEntity, Errors: errMsgs}
