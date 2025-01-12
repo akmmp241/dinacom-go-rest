@@ -124,3 +124,12 @@ type GoogleUserInfo struct {
 type GoogleCallbackRequest struct {
 	Token string `json:"token" validate:"required"`
 }
+
+type GetDrugDetailResponse struct {
+	Id          int     `json:"id"`
+	BrandName   string  `json:"brand_name"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Price       float32 `json:"price"`
+	ImageUrl    string  `json:"image_url"`
+}
