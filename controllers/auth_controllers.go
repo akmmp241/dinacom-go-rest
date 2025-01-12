@@ -14,6 +14,7 @@ type AuthController interface {
 	ForgetPassword(c *fiber.Ctx) error
 	VerifyForgetPasswordOtp(c *fiber.Ctx) error
 	ResetPassword(c *fiber.Ctx) error
+	GoogleCallback(c *fiber.Ctx) error
 }
 
 type AuthControllerImpl struct {
@@ -138,6 +139,27 @@ func (con *AuthControllerImpl) ResetPassword(c *fiber.Ctx) error {
 	globalResponse := model.GlobalResponse{
 		Message: message.Message,
 		Data:    nil,
+		Errors:  nil,
+	}
+
+	return c.JSON(&globalResponse)
+}
+
+func (con *AuthControllerImpl) GoogleCallback(c *fiber.Ctx) error {
+	req := &model.GoogleCallbackRequest{}
+	err := c.BodyParser(req)
+	if err != nil {
+		return exceptions.NewBadRequestError("Invalid request body")
+	}
+
+	loginResponse, err := con.AuthService.GoogleCallback(c.Context(), *req)
+	if err != nil {
+		return err
+	}
+
+	globalResponse := model.GlobalResponse{
+		Message: "Login success",
+		Data:    &loginResponse,
 		Errors:  nil,
 	}
 
