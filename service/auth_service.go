@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
@@ -17,6 +18,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"html/template"
 	"log"
+	http "net/http"
 	"time"
 )
 
@@ -30,6 +32,7 @@ type AuthService interface {
 	ForgetPassword(ctx context.Context, req model.ForgetPasswordRequest) error
 	VerifyForgetPasswordOtp(ctx context.Context, req model.VerifyForgetPasswordOtpRequest) (*model.VerifyForgetPasswordOtpResponse, error)
 	ResetPassword(ctx context.Context, req model.ResetPasswordRequest) (*model.ResetPasswordResponse, error)
+	GoogleCallback(ctx context.Context, req model.GoogleCallbackRequest) (*model.LoginResponse, error)
 }
 
 type AuthServiceImpl struct {
@@ -40,6 +43,7 @@ type AuthServiceImpl struct {
 	Cnf         *config.Config
 	RedisClient *redis.Client
 	Mailer      *config.Mailer
+	OauthClient *config.OauthClient
 }
 
 func NewAuthService(
@@ -49,8 +53,9 @@ func NewAuthService(
 	cnf *config.Config,
 	redisClient *redis.Client,
 	mailer *config.Mailer,
+	oauthClient *config.OauthClient,
 ) *AuthServiceImpl {
-	return &AuthServiceImpl{UserRepo: userRepo, SessionRepo: sessionRepo, DB: DB, Validate: validate, Cnf: cnf, RedisClient: redisClient, Mailer: mailer}
+	return &AuthServiceImpl{UserRepo: userRepo, SessionRepo: sessionRepo, DB: DB, Validate: validate, Cnf: cnf, RedisClient: redisClient, Mailer: mailer, OauthClient: oauthClient}
 }
 
 func (s AuthServiceImpl) Register(ctx context.Context, req model.RegisterRequest) (*model.RegisterResponse, error) {
@@ -139,7 +144,6 @@ func (s AuthServiceImpl) Login(ctx context.Context, req model.LoginRequest) (*mo
 	encodedToken := helpers.StringToBase64([]byte(token))
 	encryptedToken, err := helpers.Encrypt(encodedToken, s.Cnf.Env.GetString("APP_KEY"))
 	if err != nil {
-		log.Println("here 1")
 		return nil, exceptions.NewInternalServerError()
 	}
 
@@ -150,7 +154,6 @@ func (s AuthServiceImpl) Login(ctx context.Context, req model.LoginRequest) (*mo
 	})
 	if err != nil {
 		_ = tx.Rollback()
-		log.Println("here 2")
 		return nil, exceptions.NewInternalServerError()
 	}
 
@@ -322,4 +325,79 @@ func (s AuthServiceImpl) ResetPassword(ctx context.Context, req model.ResetPassw
 		Message: "Success Reset Password",
 	}
 	return &resetPasswordResponse, nil
+}
+
+func (s AuthServiceImpl) GoogleCallback(ctx context.Context, req model.GoogleCallbackRequest) (*model.LoginResponse, error) {
+	err := s.Validate.Struct(req)
+	if err != nil {
+		return nil, exceptions.NewFailedValidationError(req, err.(validator.ValidationErrors))
+	}
+
+	url := fmt.Sprintf("%s?access_token=%s", config.GoogleUserInfoEndpoint, req.Token)
+	http.DefaultClient.Timeout = 2 * time.Second
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, exceptions.NewBadRequestError("Invalid google access token")
+	}
+	defer response.Body.Close()
+
+	var googleUserInfo model.GoogleUserInfo
+	if err := json.NewDecoder(response.Body).Decode(&googleUserInfo); err != nil {
+		log.Println("error while decode google user info", err)
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	if googleUserInfo.Email == "" || googleUserInfo.Id == "" {
+		return nil, exceptions.NewBadRequestError("Invalid google access token")
+	}
+
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	user, err := s.UserRepo.FindByEmail(ctx, tx, googleUserInfo.Email)
+	if err != nil && !errors.Is(err, exceptions.NotFoundError{}) {
+		return nil, err
+	}
+
+	if user == nil {
+		user = &model.User{
+			Email:    googleUserInfo.Email,
+			Provider: "google",
+		}
+
+		user, err = s.UserRepo.Save(ctx, tx, user)
+		if err != nil {
+			_ = tx.Rollback()
+			return nil, err
+		}
+	}
+
+	token := uuid.NewString()
+	encodedToken := helpers.StringToBase64([]byte(token))
+	encryptedToken, err := helpers.Encrypt(encodedToken, s.Cnf.Env.GetString("APP_KEY"))
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	_, err = s.SessionRepo.Save(ctx, tx, &model.Session{
+		UserId:    user.Id,
+		Token:     token,
+		ExpiresAt: time.Now().Add(time.Hour * 24 * 7),
+	})
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, exceptions.NewInternalServerError()
+	}
+
+	_ = tx.Commit()
+
+	loginResponse := model.LoginResponse{
+		Id:    user.Id,
+		Email: user.Email,
+		Token: encryptedToken,
+	}
+
+	return &loginResponse, nil
 }

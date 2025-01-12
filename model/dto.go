@@ -36,14 +36,12 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	Id    int    `json:"id"`
-	Name  string `json:"name"`
 	Email string `json:"email"`
 	Token string `json:"token"`
 }
 
 type MeResponse struct {
 	Id    int    `json:"id"`
-	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
@@ -111,4 +109,18 @@ type RecommendedDrugsResponse struct {
 
 type UpdateComplaintRequest struct {
 	SuggestedTitle string `json:"suggested_title" validate:"required"`
+}
+
+type GoogleUserInfo struct {
+	Id            string `json:"id"`
+	Email         string `json:"email"`
+	Name          string `json:"name"`
+	FamilyName    string `json:"family_name"`
+	GivenName     string `json:"given_name"`
+	Picture       string `json:"picture"`
+	VerifiedEmail bool   `json:"verified_email"`
+}
+
+type GoogleCallbackRequest struct {
+	Token string `json:"token" validate:"required"`
 }

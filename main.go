@@ -21,13 +21,14 @@ func main() {
 
 	aiClient := config.InitAiClient(cnf)
 	awsClient := config.InitS3Client(cnf)
+	oauthClient := config.NewOauthClient(cnf)
 
 	userRepo := repository.NewUserRepository()
 	sessionRepo := repository.NewSessionRepository()
 	complaintRepo := repository.NewComplaintRepository()
 	drugRepo := repository.NewDrugRepository()
 
-	authService := service.NewAuthService(userRepo, sessionRepo, db, validate, cnf, redis, mailer)
+	authService := service.NewAuthService(userRepo, sessionRepo, db, validate, cnf, redis, mailer, oauthClient)
 	complaintService := service.NewComplaintService(validate, cnf, aiClient, awsClient, complaintRepo, db, drugRepo)
 
 	authController := controllers.NewAuthController(authService)
