@@ -35,7 +35,7 @@ func NewRouter(
 	complaint.Use(middleware.Authenticate)
 	complaint.Post("/", complaintController.ExternalWound)
 	complaint.Get("/", complaintController.GetAll)
-	complaint.Get("/simplify", complaintController.Simplifier)
+	complaint.Post("/simplify", complaintController.Simplifier)
 	complaint.Get("/:complaintId", complaintController.GetById)
 	complaint.Put("/:complaintId", complaintController.Update)
 	complaint.Get("/:complaintId/recommendations", complaintController.GetRecommendedDrugs)
