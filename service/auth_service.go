@@ -18,12 +18,17 @@ import (
 	"github.com/redis/go-redis/v9"
 	"html/template"
 	"log"
-	http "net/http"
+	"net/http"
 	"time"
 )
 
 //go:embed mail-templates/send-otp.html
 var OTPTemplateEmail string
+
+const (
+	EmailProvider  = "email"
+	GoogleProvider = "google"
+)
 
 type AuthService interface {
 	Register(ctx context.Context, req model.RegisterRequest) (*model.RegisterResponse, error)
@@ -79,10 +84,14 @@ func (s AuthServiceImpl) Register(ctx context.Context, req model.RegisterRequest
 	}
 
 	hashedPassword, err := helpers.HashPassword(req.Password)
+	if err != nil {
+		return nil, exceptions.NewInternalServerError()
+	}
 
 	user = &model.User{
 		Email:    req.Email,
 		Password: hashedPassword,
+		Provider: EmailProvider,
 	}
 
 	user, err = s.UserRepo.Save(ctx, tx, user)
@@ -105,7 +114,6 @@ func (s AuthServiceImpl) Register(ctx context.Context, req model.RegisterRequest
 	})
 	if err != nil {
 		_ = tx.Rollback()
-		log.Println("here 2")
 		return nil, exceptions.NewInternalServerError()
 	}
 
@@ -364,7 +372,7 @@ func (s AuthServiceImpl) GoogleCallback(ctx context.Context, req model.GoogleCal
 	if user == nil {
 		user = &model.User{
 			Email:    googleUserInfo.Email,
-			Provider: "google",
+			Provider: GoogleProvider,
 		}
 
 		user, err = s.UserRepo.Save(ctx, tx, user)
