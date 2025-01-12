@@ -63,15 +63,16 @@ func internalServerError(c *fiber.Ctx) error {
 
 func handleValidationErrorMessage(tag string, param string, field string) string {
 	var msg string
+	field = strings.Replace(field, "_", " ", -1)
 	switch tag {
 	case "required":
 		msg = fmt.Sprintf("The %s field is required", field)
 	case "email":
 		msg = "This is not a valid email"
 	case "min":
-		msg = fmt.Sprintf("The %s field must be at least %s characters", strings.ToLower(param), tag)
+		msg = fmt.Sprintf("The %s field must be at least %s characters", strings.ToLower(field), param)
 	case "max":
-		msg = fmt.Sprintf("The %s field must be at most %s characters", strings.ToLower(param), tag)
+		msg = fmt.Sprintf("The %s field must be at most %s characters", strings.ToLower(field), param)
 	case "eqfield":
 		if param == "Password" {
 			msg = "The password confirmation does not match"
