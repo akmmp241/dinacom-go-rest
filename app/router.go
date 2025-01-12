@@ -12,6 +12,7 @@ func NewRouter(
 	middleware middleware.Middleware,
 	authController controllers.AuthController,
 	complaintController controllers.ComplaintController,
+	drugController controllers.DrugController,
 ) *fiber.App {
 	appRouter := fiber.New(fiber.Config{
 		Prefork:      true,
@@ -39,6 +40,8 @@ func NewRouter(
 	complaint.Get("/:complaintId", complaintController.GetById)
 	complaint.Put("/:complaintId", complaintController.Update)
 	complaint.Get("/:complaintId/recommendations", complaintController.GetRecommendedDrugs)
+
+	api.Get("/drugs/:drugId", drugController.GetById)
 
 	return appRouter
 }

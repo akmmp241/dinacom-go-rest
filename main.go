@@ -30,13 +30,15 @@ func main() {
 
 	authService := service.NewAuthService(userRepo, sessionRepo, db, validate, cnf, redis, mailer, oauthClient)
 	complaintService := service.NewComplaintService(validate, cnf, aiClient, awsClient, complaintRepo, db, drugRepo)
+	drugService := service.NewDrugService(drugRepo, db)
 
 	authController := controllers.NewAuthController(authService)
 	complaintController := controllers.NewComplaintController(complaintService)
+	drugController := controllers.NewDrugController(drugService)
 
 	mw := middleware.NewMiddleware(cnf, sessionRepo, userRepo, db, redis)
 
-	fiberApp := app.NewRouter(mw, authController, complaintController)
+	fiberApp := app.NewRouter(mw, authController, complaintController, drugController)
 
 	if err := fiberApp.Listen(":3000"); err != nil {
 		panic(err)

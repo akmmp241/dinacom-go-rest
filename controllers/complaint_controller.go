@@ -67,7 +67,7 @@ func (A ComplaintControllerImpl) ExternalWound(ctx *fiber.Ctx) error {
 		Errors:  nil,
 	}
 
-	return ctx.JSON(&globalResponse)
+	return ctx.Status(fiber.StatusCreated).JSON(&globalResponse)
 }
 
 func (A ComplaintControllerImpl) GetById(ctx *fiber.Ctx) error {
