@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 )
 
 type UserRepository interface {
@@ -23,8 +24,8 @@ func NewUserRepository() *UserRepositoryImpl {
 }
 
 func (u UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user *model.User) (*model.User, error) {
-	query := `INSERT INTO users (id, email, password) VALUES (NULL, ?, ?)`
-	result, err := tx.ExecContext(ctx, query, user.Email, user.Password)
+	query := `INSERT INTO users (id, email, password, provider) VALUES (NULL, ?, ?, ?)`
+	result, err := tx.ExecContext(ctx, query, user.Email, user.Password, user.Provider)
 	if err != nil {
 		return nil, exceptions.NewInternalServerError()
 	}
@@ -39,9 +40,11 @@ func (u UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user *model.Us
 }
 
 func (u UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.Tx, email string) (*model.User, error) {
-	query := `SELECT id, email, password FROM users WHERE email = ?`
+	query := `SELECT id, email, password, provider FROM users WHERE email = ?`
 	rows, err := tx.QueryContext(ctx, query, email)
 	if err != nil {
+		log.Println("here1")
+		log.Println(err)
 		return nil, exceptions.NewInternalServerError()
 	}
 	defer rows.Close()
@@ -51,8 +54,10 @@ func (u UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.Tx, email s
 		return nil, exceptions.NewNotFoundError()
 	}
 
-	err = rows.Scan(&user.Id, &user.Email, &user.Password)
+	err = rows.Scan(&user.Id, &user.Email, &user.Password, &user.Provider)
 	if err != nil {
+		log.Println("here2")
+		log.Println(err)
 		return nil, exceptions.NewInternalServerError()
 	}
 
@@ -60,7 +65,7 @@ func (u UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.Tx, email s
 }
 
 func (u UserRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, id int) (*model.User, error) {
-	query := `SELECT id, email, password FROM users WHERE id = ?`
+	query := `SELECT id, email, password, provider FROM users WHERE id = ?`
 	rows, err := tx.QueryContext(ctx, query, id)
 	if err != nil {
 		return nil, exceptions.NewInternalServerError()
@@ -72,7 +77,7 @@ func (u UserRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, id int) (*
 		return nil, exceptions.NewNotFoundError()
 	}
 
-	err = rows.Scan(&user.Id, &user.Email, &user.Password)
+	err = rows.Scan(&user.Id, &user.Email, &user.Password, &user.Provider)
 	if err != nil {
 		return nil, exceptions.NewInternalServerError()
 	}
