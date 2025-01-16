@@ -1,6 +1,10 @@
 package exceptions
 
-import "net/http"
+import (
+	"github.com/go-playground/validator/v10"
+	"net/http"
+	"reflect"
+)
 
 type GlobalError interface {
 	Error() string
@@ -49,7 +53,7 @@ func (h HttpConflictError) GetCode() int {
 	return h.Code
 }
 
-func NewConflictError(msg string) HttpConflictError {
+func NewHttpConflictError(msg string) HttpConflictError {
 	return HttpConflictError{Msg: msg, Code: http.StatusConflict}
 }
 
@@ -68,4 +72,89 @@ func (i HttpInternalServerError) GetCode() int {
 
 func NewInternalServerError() HttpInternalServerError {
 	return HttpInternalServerError{Msg: "Internal Server Error", Code: http.StatusInternalServerError}
+}
+
+type HttpUnauthorized struct {
+	Msg  string
+	Code int
+}
+
+func (u HttpUnauthorized) Error() string {
+	return u.Msg
+}
+
+func (u HttpUnauthorized) GetCode() int {
+	return u.Code
+}
+
+func NewUnauthorizedError(msg string) HttpUnauthorized {
+	return HttpUnauthorized{Msg: msg, Code: http.StatusUnauthorized}
+}
+
+type HttpForbiddenError struct {
+	Msg  string
+	Code int
+}
+
+func (f HttpForbiddenError) Error() string {
+	return f.Msg
+}
+
+func (f HttpForbiddenError) GetCode() int {
+	return f.Code
+}
+
+func NewForbiddenError(msg string) HttpForbiddenError {
+	return HttpForbiddenError{Msg: msg, Code: http.StatusForbidden}
+}
+
+type HttpNotFoundError struct {
+	Msg  string
+	Code int
+}
+
+func (f HttpNotFoundError) Error() string {
+	return f.Msg
+}
+
+func (f HttpNotFoundError) GetCode() int {
+	return f.Code
+}
+
+func NewHttpNotFoundError(msg string) HttpNotFoundError {
+	return HttpNotFoundError{Msg: msg, Code: http.StatusNotFound}
+}
+
+type FailedValidationError struct {
+	Msg    string
+	Code   int
+	Errors map[string]interface{}
+}
+
+func (f FailedValidationError) Error() string {
+	return f.Msg
+}
+
+func (f FailedValidationError) GetCode() int {
+	return f.Code
+}
+
+func NewFailedValidationError(obj interface{}, err validator.ValidationErrors) FailedValidationError {
+
+	objRef := reflect.TypeOf(obj)
+
+	errMsgs := make(map[string]interface{})
+
+	for i := 0; i < objRef.NumField(); i++ {
+		structField := objRef.Field(i)
+		errMsgs[structField.Tag.Get("json")] = nil
+	}
+
+	for _, err := range err {
+		structField, _ := objRef.FieldByName(err.Field())
+		field := structField.Tag.Get("json")
+		errMsgs[field] = handleValidationErrorMessage(err.Tag(), err.Param(), field)
+	}
+
+	return FailedValidationError{Msg: "Failed Validation", Code: http.StatusUnprocessableEntity, Errors: errMsgs}
 }

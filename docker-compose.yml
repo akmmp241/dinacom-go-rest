@@ -1,10 +1,12 @@
 services:
   web:
-    build: .
+    build:
+        context: .
+        dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    environment:
-      - DB_HOST=db
+    env_file:
+      - ./.env
     networks:
       - dinacom-net
     restart: on-failure
@@ -16,11 +18,20 @@ services:
     container_name: dinacom-db
     restart: always
     ports:
-      - "3306:3306"
+      - "3307:3306"
     env_file:
       - ./.env
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - dinacom-net
+
+  redis:
+    image: redis:alpine
+    container_name: dinacom-redis
+    restart: always
+    ports:
+      - "6379:6379"
     networks:
       - dinacom-net
 

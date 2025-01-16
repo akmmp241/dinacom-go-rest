@@ -4,9 +4,9 @@ import "time"
 
 type User struct {
 	Id       int
-	Name     string
 	Email    string
 	Password string
+	Provider string
 }
 
 type Session struct {
@@ -14,4 +14,23 @@ type Session struct {
 	UserId    int
 	Token     string
 	ExpiresAt time.Time
+}
+
+type Complaint struct {
+	Id            string
+	UserId        int
+	Title         string
+	ComplaintsMsg string
+	Response      string
+	ImageUrl      string
+	CreatedAt     time.Time
+}
+
+type Drug struct {
+	Id          int
+	BrandName   string
+	Name        string
+	Description string
+	Price       float32
+	ImageUrl    string
 }

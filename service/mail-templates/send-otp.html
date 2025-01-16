@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Email</title>
+</head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333333;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .container {
+        background-color: #ffffff;
+        padding: 30px;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        border-top: 8px solid #1738DC;
+    }
+
+    .header {
+        display: flex;
+        gap: 12px;
+        color: #111111;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .header img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .header h1 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #111111;
+    }
+
+    h4 {
+        color: #111111;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .link {
+        color: #1738DC;
+        text-decoration: underline;
+        font-weight: 600;
+    }
+
+    .code {
+        font-size: 24px;
+        font-weight: bold;
+        color: #111111;
+        text-align: center;
+        background-color: #EEEEEE;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 10px 0;
+    }
+
+    p {
+        font-size: 14px;
+        color: #777777;
+    }
+
+    .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .footer img {
+        width: 40px;
+        height: 40px;
+    }
+</style>
+
+<body>
+    <div class="header">
+        <img src="https://via.placeholder.com/100" alt="Evia Logo">
+        <h1>Evia</h1>
+    </div>
+    <div class="container">
+        <h1>Verification Code</h1>
+        <h4>Hi, {{.Email}}</h4>
+        <p>Use the verification code below to reset the password:</p>
+        <h3 class="code">{{.OtpCode}}</h3>
+        <p>The code will expire in 30 minutes and can be used only once.</p>
+        <h3>Thank you,</h3>
+    </div>
+    <div class="footer">
+        <img src="https://via.placeholder.com/100" alt="Evia Logo">
+        <p>© Evia</p>
+    </div>
+</body>
+
+</html>

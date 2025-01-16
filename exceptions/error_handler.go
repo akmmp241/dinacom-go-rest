@@ -3,18 +3,24 @@ package exceptions
 import (
 	"akmmp241/dinamcom-2024/dinacom-go-rest/model"
 	"errors"
-	"github.com/go-playground/validator/v10"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"log"
+	"strings"
 )
+
+type IError struct {
+	Tag     string `json:"tag"`
+	Message string `json:"message"`
+}
 
 var globalResponse = &model.GlobalResponse{
 	Data: nil,
 }
 
 func HandleError(c *fiber.Ctx, err error) error {
-	if errors.As(err, &validator.ValidationErrors{}) {
-		return validationError(c, err.(validator.ValidationErrors))
+	if errors.As(err, &FailedValidationError{}) {
+		return validationError(c, err.(FailedValidationError))
 	}
 
 	if errors.As(err, &HttpInternalServerError{}) {
@@ -24,19 +30,20 @@ func HandleError(c *fiber.Ctx, err error) error {
 
 	var e *fiber.Error
 	if errors.As(err, &e) {
-		globalResponse.Message = err.Error()
+		globalResponse.Message = e.Message
+		globalResponse.Errors = nil
 		return c.Status(e.Code).JSON(&globalResponse)
 	}
 
 	return baseError(c, err.(GlobalError))
 }
 
-func validationError(c *fiber.Ctx, err validator.ValidationErrors) error {
-	globalResponse.Message = "Failed Validation"
-	globalResponse.Errors = err.Error()
+func validationError(c *fiber.Ctx, err FailedValidationError) error {
+	globalResponse.Message = err.Msg
+	globalResponse.Errors = err.Errors
 
 	log.Println(err.Error())
-	return c.Status(fiber.StatusBadRequest).JSON(&globalResponse)
+	return c.Status(err.GetCode()).JSON(&globalResponse)
 }
 
 func baseError(c *fiber.Ctx, err GlobalError) error {
@@ -52,4 +59,27 @@ func internalServerError(c *fiber.Ctx) error {
 	globalResponse.Errors = nil
 
 	return c.Status(fiber.StatusInternalServerError).JSON(&globalResponse)
+}
+
+func handleValidationErrorMessage(tag string, param string, field string) string {
+	var msg string
+	field = strings.Replace(field, "_", " ", -1)
+	switch tag {
+	case "required":
+		msg = fmt.Sprintf("The %s field is required", field)
+	case "email":
+		msg = "This is not a valid email"
+	case "min":
+		msg = fmt.Sprintf("The %s field must be at least %s characters", strings.ToLower(field), param)
+	case "max":
+		msg = fmt.Sprintf("The %s field must be at most %s characters", strings.ToLower(field), param)
+	case "eqfield":
+		if param == "Password" {
+			msg = "The password confirmation does not match"
+		} else {
+			msg = "The field does not match"
+		}
+	}
+
+	return msg
 }
